@@ -1,0 +1,131 @@
+---
+/**
+ * Aurora.astro - a soft northern-lights veil for the Contact section, echoing
+ * Hannah's aurora paintings. Three heavily blurred curtains in her palette
+ * (green, teal, magenta, violet) undulate and drift on offset clocks so the
+ * loop never reads as a loop. Blend mode screen so only the colored light
+ * shows; a mask fades everything downward into the dark sky.
+ * Client island: an IntersectionObserver runs the curtains only while the
+ * section is on screen, and html.tab-hidden pauses them with the rest of the
+ * page. Transform and opacity only. Reduced motion freezes the curtains into
+ * a static soft gradient (global.css kills the keyframes; we never add .on).
+ * Low contrast, slow, no strobing.
+ */
+---
+
+<div class="aurora" aria-hidden="true">
+  <div class="curtain c1"></div>
+  <div class="curtain c2"></div>
+  <div class="curtain c3"></div>
+</div>
+
+<style>
+  .aurora {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    opacity: 0.35;
+    /* the lights live in the upper sky and dissolve into the dark on every
+       side, so the clipped blur never shows a rectangle edge */
+    mask-image: radial-gradient(ellipse 82% 68% at 50% 16%, #000 26%, transparent 72%);
+    -webkit-mask-image: radial-gradient(ellipse 82% 68% at 50% 16%, #000 26%, transparent 72%);
+  }
+
+  /* each curtain: a tall band of light, heavily blurred so its edges are
+     transparent breath rather than shapes. Blur is static; only transform
+     animates, so the curtains stay compositor-friendly. */
+  .curtain {
+    position: absolute;
+    top: -18%;
+    height: 92%;
+    border-radius: 50%;
+    filter: blur(48px);
+    will-change: transform;
+  }
+  .c1 {
+    left: -10%;
+    width: 56%;
+    background: linear-gradient(
+      102deg,
+      transparent 8%,
+      rgba(88, 230, 168, 0.55) 32%,
+      rgba(74, 234, 255, 0.5) 58%,
+      transparent 86%
+    );
+    animation: aur-a 19s ease-in-out -4s infinite;
+  }
+  .c2 {
+    left: 30%;
+    width: 52%;
+    background: linear-gradient(
+      96deg,
+      transparent 10%,
+      rgba(155, 48, 255, 0.5) 36%,
+      rgba(74, 234, 255, 0.42) 62%,
+      transparent 88%
+    );
+    animation: aur-b 27s ease-in-out -11s infinite;
+  }
+  .c3 {
+    left: 62%;
+    width: 50%;
+    background: linear-gradient(
+      104deg,
+      transparent 8%,
+      rgba(217, 70, 239, 0.45) 34%,
+      rgba(88, 230, 168, 0.4) 64%,
+      transparent 86%
+    );
+    animation: aur-c 23s ease-in-out -7s infinite;
+  }
+
+  /* run only while the island says the section is in view. This rule must
+     follow the .c* shorthands above, which reset animation-play-state. */
+  .aurora:not(.on) .curtain { animation-play-state: paused; }
+  :global(html.tab-hidden) .curtain { animation-play-state: paused !important; }
+
+  /* slow undulation: gentle sideways drift, a lean, and a vertical breath.
+     Different travel per curtain so the three never sync into a hard loop. */
+  @keyframes aur-a {
+    0%, 100% { transform: translateX(-3%) skewX(-7deg) scaleY(1); }
+    50%      { transform: translateX(5%) skewX(5deg) scaleY(1.08); }
+  }
+  @keyframes aur-b {
+    0%, 100% { transform: translateX(4%) skewX(6deg) scaleY(1.05); }
+    50%      { transform: translateX(-5%) skewX(-5deg) scaleY(0.96); }
+  }
+  @keyframes aur-c {
+    0%, 100% { transform: translateX(-4%) skewX(4deg) scaleY(0.98); }
+    50%      { transform: translateX(3%) skewX(-6deg) scaleY(1.07); }
+  }
+
+  /* mobile keeps the lights, just lighter */
+  @media (max-width: 640px) {
+    .aurora { opacity: 0.24; }
+    .curtain { filter: blur(36px); }
+  }
+
+  /* reduced motion: global.css stops the keyframes, leaving the curtains as
+     a static soft aurora gradient; keep it a touch calmer too */
+  @media (prefers-reduced-motion: reduce) {
+    .aurora { opacity: 0.3; }
+  }
+</style>
+
+<script>
+  // run the curtains only while the Contact section is actually on screen
+  const aurora = document.querySelector('.aurora');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (aurora && !reduce && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) aurora.classList.toggle('on', e.isIntersecting);
+      },
+      { threshold: 0.05 }
+    );
+    io.observe(aurora);
+  }
+</script>

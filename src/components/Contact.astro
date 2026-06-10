@@ -2,8 +2,10 @@
 /**
  * Contact.astro - inquiry form wired to Formspree. The external links
  * (Instagram, Ko-fi) live in the nav and the footer, not here. No em dashes
- * in any copy.
+ * in any copy. A soft aurora veil (Aurora.astro) glows behind everything,
+ * upper sky only; the form and labels sit above it and stay fully readable.
  */
+import Aurora from './Aurora.astro';
 
 // ==========================================================================
 //  FORMSPREE ENDPOINT
@@ -14,6 +16,8 @@ const FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_ME';
 ---
 
 <section id="contact" class="section contact">
+  <Aurora />
+
   <div class="reveal">
     <h2 class="section-title">Contact</h2>
     <p class="section-desc">Commissions, prints, and originals.</p>
@@ -40,7 +44,9 @@ const FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_ME';
 </section>
 
 <style>
-  .contact { max-width: 760px; }
+  /* the section hosts the aurora veil; content stacks above it */
+  .contact { position: relative; max-width: 760px; }
+  .contact .reveal, .contact .cform { position: relative; z-index: 1; }
   .cform { margin-top: 30px; display: flex; flex-direction: column; gap: 18px; }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
   .cform label { display: flex; flex-direction: column; gap: 7px; }
