@@ -1,9 +1,9 @@
 {
-  "_todo": "PLACEHOLDER, confirm with Hannah: title, medium, and price were generated for layout, not supplied.",
-  "title": "Aurora Sky",
-  "medium": "Painting",
-  "note": "A small study of the northern lights in purple and green.",
-  "image": "../../assets/art/aurora-sky.jpg",
+  "_todo": "Title is unofficial (the artist's own note calls this one inspired by Mull, it is not a formal title) and the medium is a best-guess. Confirm both with Hannah. Node id kept as aurora-sky to preserve its constellation position.",
+  "title": "Inspired by Mull",
+  "medium": "Digital painting",
+  "note": "An aurora in purple and green over low hills, a digital study after Mull.",
+  "image": "../../assets/art/mull2.jpg",
   "x": 80,
   "y": 84,
   "links": ["rocket-girl"]

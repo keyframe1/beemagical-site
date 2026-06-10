@@ -11,16 +11,18 @@ import { Image } from 'astro:assets';
 import { getArt } from '../lib/art';
 
 import amethystGirl from '../assets/art/amethyst-girl.jpg';
-import blackCat from '../assets/art/black-cat.jpg';
 import boxerDog from '../assets/art/boxer-dog.jpg';
 import fluffyCat from '../assets/art/fluffy-cat.jpg';
-import poodle from '../assets/art/poodle.jpg';
 import redheadGirl from '../assets/art/redhead-girl.jpg';
 import rottweiler from '../assets/art/rottweiler.jpg';
 import sketchGirl from '../assets/art/sketch-girl.jpg';
-// Portrait works kept out of the cosmic constellation but still shown here.
 import selkieGirl from '../assets/art/selkie-girl.jpg';
-import violetWoman from '../assets/art/violet-woman.jpg';
+// Hannah's higher-resolution titled pieces, kept out of the cosmic
+// constellation but shown here. The two pet portraits also anchor Commissions,
+// and the self-portrait is the artist image in About.
+import bird from '../assets/art/bird.jpg';
+import taylor from '../assets/art/taylor.jpg';
+import selfPortrait from '../assets/art/bee-untitled-self.jpg';
 
 const works = await getArt();
 const indexOf = new Map(works.map((w, i) => [w.id, i]));
@@ -34,10 +36,10 @@ const extras = [
   { image: fluffyCat, alt: 'Pet portrait of a fluffy white cat' },
   { image: sketchGirl, alt: 'Expressive sketch of a girl with rainbow hair' },
   { image: boxerDog, alt: 'Pet portrait of a boxer dog' },
-  { image: blackCat, alt: 'Pet portrait of a black cat with golden eyes' },
-  { image: poodle, alt: 'Pet portrait of a white poodle' },
+  { image: bird, alt: 'Bird, a digital painting of a black cat with golden eyes' },
+  { image: taylor, alt: 'Taylor, a watercolour portrait of a white poodle' },
   { image: selkieGirl, alt: 'Portrait of a selkie girl rising from green water' },
-  { image: violetWoman, alt: 'Portrait of a woman with violet hair against the stars' },
+  { image: selfPortrait, alt: 'A self-portrait of the artist, violet hair against the stars' },
 ];
 
 // Interleave gallery works and extras so the strip mixes skies, fae, pets,

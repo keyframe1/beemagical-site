@@ -1,10 +1,10 @@
 {
-  "_todo": "PLACEHOLDER, confirm with Hannah: title, year, and price were generated for layout, not supplied.",
+  "_todo": "Medium is a best-guess, confirm with Hannah.",
   "title": "Aurora",
   "medium": "Acrylic on canvas",
-  "year": 2016,
-  "note": "Acrylic on canvas. A green and purple aurora over a dark horizon.",
-  "image": "../../assets/art/aurora-borealis.jpg",
+  "year": 2018,
+  "note": "A green and purple aurora arcing over a dark treeline.",
+  "image": "../../assets/art/aurora2018.jpg",
   "x": 38,
   "y": 66,
   "links": ["aurora-wolf"]

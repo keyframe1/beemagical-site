@@ -1,10 +1,9 @@
 {
-  "_todo": "PLACEHOLDER, confirm with Hannah: title, year, and price were generated for layout, not supplied.",
-  "title": "Uncreated Nebula",
+  "_todo": "This piece is untitled; 'Nebula' is a placeholder and the medium is a best-guess. Confirm both with Hannah. Node id kept as uncreated-nebula to preserve its constellation position and links.",
+  "title": "Nebula",
   "medium": "Acrylic on canvas",
-  "year": 2016,
-  "note": "Acrylic on canvas. An amber and teal nebula around a star cluster.",
-  "image": "../../assets/art/uncreated-nebula.jpg",
+  "note": "An amber and teal nebula around a bright star cluster.",
+  "image": "../../assets/art/unnamedneb.jpg",
   "x": 14,
   "y": 36,
   "links": ["smaragdine-nebula"]

@@ -1,10 +1,10 @@
 {
-  "_todo": "PLACEHOLDER, confirm with Hannah: title, year, and price were generated for layout, not supplied.",
+  "_todo": "Medium is a best-guess and the year is read from the canvas signature, confirm both with Hannah.",
   "title": "Smaragdine",
   "medium": "Acrylic on canvas",
-  "year": 2016,
-  "note": "Acrylic on canvas. A green nebula.",
-  "image": "../../assets/art/smaragdine-nebula.jpg",
+  "year": 2018,
+  "note": "A green nebula scattered across a field of stars.",
+  "image": "../../assets/art/smarag.jpg",
   "x": 10,
   "y": 62,
   "links": ["tardis-nebula"]

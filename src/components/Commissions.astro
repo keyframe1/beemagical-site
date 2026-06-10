@@ -7,8 +7,8 @@
  * the contact section. No prices anywhere.
  */
 import { Image } from 'astro:assets';
-import fluffyCat from '../assets/art/fluffy-cat.jpg';
-import rottweiler from '../assets/art/rottweiler.jpg';
+import taylor from '../assets/art/taylor.jpg';
+import bird from '../assets/art/bird.jpg';
 
 const clips = [
   {
@@ -25,8 +25,8 @@ const clips = [
   },
 ];
 const stills = [
-  { image: rottweiler, caption: 'Pet portrait', note: 'Dogs, painted with love', alt: 'Painted pet portrait of a rottweiler' },
-  { image: fluffyCat, caption: 'Pet portrait', note: 'Cats sit still for once', alt: 'Painted pet portrait of a fluffy white cat' },
+  { image: taylor, caption: 'Pet portrait', note: 'Dogs, painted with love', alt: 'Taylor, a watercolour portrait of a white poodle' },
+  { image: bird, caption: 'Pet portrait', note: 'Cats sit still for once', alt: 'Bird, a digital painting of a black cat with golden eyes' },
 ];
 ---
 
@@ -111,9 +111,12 @@ const stills = [
     width: 100%;
     aspect-ratio: 580 / 860;
     height: auto;
-    object-fit: cover;
     display: block;
   }
+  .com-frame video { object-fit: cover; }
+  /* the still portraits show complete and uncropped so the whole piece and
+     the artist's signature read; the dark frame letterboxes them. */
+  .com-frame :global(img) { object-fit: contain; }
 
   .com-star {
     position: absolute;
