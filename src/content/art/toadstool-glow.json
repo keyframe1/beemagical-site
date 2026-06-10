@@ -1,0 +1,15 @@
+{
+  "title": "Toadstool Glow",
+  "medium": "Gouache and ink on paper",
+  "dimensions": "9 x 12 in",
+  "year": 2024,
+  "price": "$620",
+  "status": "available",
+  "prints": true,
+  "printsFrom": 40,
+  "image": "../../assets/art/toadstool-glow.svg",
+  "note": "A little red cap lit from the inside, the way the forest floor looks after dark.",
+  "x": 23,
+  "y": 80,
+  "links": ["fox-in-fireweed"]
+}

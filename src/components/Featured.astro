@@ -1,0 +1,85 @@
+---
+/**
+ * Featured.astro - the headline work. Pulls the featured piece from the
+ * collection and renders it large through astro:assets. "Acquire" points to
+ * the contact section. Clicking the image opens it in the Lightbox.
+ */
+import { Image } from 'astro:assets';
+import { getArt, FEATURED_SLUG } from '../lib/art';
+
+const works = await getArt();
+const index = works.findIndex((w) => w.id === FEATURED_SLUG);
+const work = works[index];
+const d = work.data;
+---
+
+<section id="featured" class="section">
+  <div class="reveal">
+    <div class="eyebrow">Featured Work</div>
+    <h2 class="section-title featured-title">{d.title}</h2>
+  </div>
+
+  <div class="feat reveal">
+    <button class="feat-img" type="button" data-index={index} aria-label={`Open ${d.title} in the viewer`}>
+      <Image
+        src={d.image}
+        alt={`${d.title}. ${d.note}`}
+        width={d.image.width}
+        height={d.image.height}
+        loading="lazy"
+      />
+    </button>
+
+    <div class="feat-body">
+      <p class="feat-sub">{d.medium} . {d.dimensions} . {d.year}</p>
+      <p class="feat-note">{d.note}</p>
+      <p class="feat-price">{d.price}{d.prints && d.printsFrom ? ` . Prints from $${d.printsFrom}` : ''}</p>
+      <div class="cta">
+        <!-- Acquire points to the contact section. To send buyers straight to
+             the Ko-fi shop instead, swap href to "https://ko-fi.com/bee_magical/shop". -->
+        <a class="btn" href="#contact">Acquire</a>
+        <!-- Prints button: point this to the Ko-fi shop when it is live, e.g.
+             href="https://ko-fi.com/bee_magical/shop" target="_blank" rel="noopener". -->
+        <a class="btn ghost" href="#contact">Order a print</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .feat {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 44px;
+    align-items: center;
+    margin-top: 36px;
+  }
+  .feat-img {
+    padding: 0;
+    border: 1px solid rgba(74, 234, 255, 0.3);
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    background: #05071a;
+    box-shadow: 0 0 34px rgba(74, 234, 255, 0.16), 0 16px 40px rgba(0, 0, 0, 0.5);
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+  }
+  .feat-img:hover { transform: translateY(-4px); box-shadow: 0 0 46px rgba(217, 70, 239, 0.3), 0 22px 50px rgba(0, 0, 0, 0.6); }
+  .feat-img :global(img) { width: 100%; height: auto; display: block; }
+
+  .feat-sub { font-family: var(--font-body); font-weight: 300; font-size: 13px; letter-spacing: 0.06em; color: rgba(226, 232, 244, 0.55); }
+  .feat-note { font-family: var(--font-body); font-weight: 300; font-size: clamp(17px, 2vw, 20px); color: rgba(226, 232, 244, 0.85); margin-top: 14px; }
+  .feat-price { font-family: var(--font-body); font-weight: 500; font-size: 16px; color: var(--cyan); margin-top: 16px; }
+  .cta { margin-top: 26px; display: flex; gap: 14px; flex-wrap: wrap; }
+
+  @media (max-width: 760px) {
+    .feat { grid-template-columns: 1fr; gap: 24px; }
+  }
+</style>
+
+<script>
+  const fb = document.querySelector('.feat-img') as HTMLElement | null;
+  fb?.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('lightbox:open', { detail: { index: Number(fb.dataset.index) } }));
+  });
+</script>

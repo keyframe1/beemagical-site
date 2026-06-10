@@ -1,0 +1,15 @@
+{
+  "title": "Fox in Fireweed",
+  "medium": "Acrylic on canvas",
+  "dimensions": "20 x 24 in",
+  "year": 2025,
+  "price": "Sold",
+  "status": "sold",
+  "prints": true,
+  "printsFrom": 50,
+  "image": "../../assets/art/fox-in-fireweed.svg",
+  "note": "Orange on magenta on orange. The fox is barely keeping it together and loving it.",
+  "x": 61,
+  "y": 71,
+  "links": ["hummingbird-trumpet-vine"]
+}

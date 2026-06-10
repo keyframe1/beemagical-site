@@ -1,0 +1,68 @@
+---
+/**
+ * Loader.astro - the intro overlay. The wordmark glows up while the bee
+ * (in FaeBee.astro) flies its arc in and lands beside it. FaeBee drives the
+ * timing and then adds .done here to fade the overlay away, after which the
+ * bee stays on the page. Under reduced motion FaeBee hides this immediately.
+ */
+---
+
+<div id="loader" aria-hidden="true">
+  <div class="loader-stage">
+    <img
+      class="loader-mark"
+      src="/logo/bee-magical-wordmark.png"
+      alt=""
+      width="1030"
+      height="242"
+    />
+    <span class="land-burst" data-burst></span>
+  </div>
+</div>
+
+<style>
+  #loader {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(circle at 50% 42%, var(--sky-1) 0%, var(--sky-2) 45%, var(--sky-3) 100%);
+    transition: opacity 0.9s ease, visibility 0.9s ease;
+  }
+  #loader.done {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .loader-stage {
+    position: relative;
+    width: min(560px, 84vw);
+    text-align: center;
+  }
+  .loader-mark {
+    width: 100%;
+    height: auto;
+    /* glow up handoff; FaeBee removes the loader once this settles */
+    animation: glowup 1.6s ease forwards 0.5s;
+    opacity: 0;
+  }
+
+  /* burst ring fired at the moment the bee lands */
+  .land-burst {
+    position: absolute;
+    top: 18%;
+    left: 76%;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    border: 2px solid var(--cyan);
+    box-shadow: 0 0 24px var(--cyan);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .land-burst.go { animation: burst 0.7s ease-out forwards; }
+</style>

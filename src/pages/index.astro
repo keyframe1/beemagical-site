@@ -1,0 +1,56 @@
+---
+import Base from '../layouts/Base.astro';
+import Starfield from '../components/Starfield.astro';
+import Loader from '../components/Loader.astro';
+import FaeBee from '../components/FaeBee.astro';
+import Nav from '../components/Nav.astro';
+import Hero from '../components/Hero.astro';
+import Constellation from '../components/Constellation.astro';
+import Featured from '../components/Featured.astro';
+import About from '../components/About.astro';
+import Contact from '../components/Contact.astro';
+import Footer from '../components/Footer.astro';
+import Lightbox from '../components/Lightbox.astro';
+---
+
+<Base>
+  <!-- ambient + intro islands -->
+  <Starfield />
+  <Loader />
+  <FaeBee />
+
+  <Nav />
+
+  <main class="wrap">
+    <Hero />
+    <div class="div"><span class="ln"></span><span class="d"></span><span class="ln"></span></div>
+    <Constellation />
+    <Featured />
+    <About />
+    <Contact />
+  </main>
+
+  <Footer />
+
+  <!-- full-image viewer (island) -->
+  <Lightbox />
+</Base>
+
+<script>
+  // scroll-reveal: reveal sections as they enter. CSS only hides them when
+  // JS is present (html.js), so a no-JS page still shows everything.
+  const items = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window && items.length) {
+    const io = new IntersectionObserver(
+      (entries, obs) => {
+        for (const e of entries) {
+          if (e.isIntersecting) { e.target.classList.add('in'); obs.unobserve(e.target); }
+        }
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -8% 0px' }
+    );
+    items.forEach((el) => io.observe(el));
+  } else {
+    items.forEach((el) => el.classList.add('in'));
+  }
+</script>

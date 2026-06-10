@@ -1,0 +1,134 @@
+---
+/**
+ * Contact.astro - inquiry form wired to Formspree, plus the real external
+ * links. No em dashes in any copy.
+ */
+
+// ==========================================================================
+//  FORMSPREE ENDPOINT
+//  Paste your real Formspree form ID below (from your Formspree dashboard).
+//  It looks like: https://formspree.io/f/abcdwxyz
+// ==========================================================================
+const FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_ME';
+
+const INSTAGRAM = 'https://www.instagram.com/bee__magical/';
+const KOFI = 'https://ko-fi.com/bee_magical';
+---
+
+<section id="contact" class="section contact">
+  <div class="reveal">
+    <div class="eyebrow">Contact</div>
+    <h2 class="section-title">Say Hello</h2>
+    <p class="section-desc">For an original, a print, or a commission, send a note. Replies come from Louisiana.</p>
+  </div>
+
+  <form class="cform reveal" data-endpoint={FORMSPREE_ENDPOINT}>
+    <div class="row">
+      <label>
+        <span>Name</span>
+        <input type="text" name="name" autocomplete="name" required />
+      </label>
+      <label>
+        <span>Email</span>
+        <input type="email" name="email" autocomplete="email" required />
+      </label>
+    </div>
+    <label>
+      <span>Which work, and what are you hoping for</span>
+      <textarea name="message" rows="4" required></textarea>
+    </label>
+    <button class="btn" type="submit">Send it</button>
+    <p class="cform-status" role="status" aria-live="polite"></p>
+  </form>
+
+  <div class="contact-links reveal">
+    <a href={INSTAGRAM} target="_blank" rel="noopener">Instagram</a>
+    <span class="sep">.</span>
+    <a href={KOFI} target="_blank" rel="noopener">Ko-fi</a>
+  </div>
+</section>
+
+<style>
+  .contact { max-width: 760px; }
+  .cform { margin-top: 30px; display: flex; flex-direction: column; gap: 18px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .cform label { display: flex; flex-direction: column; gap: 7px; }
+  .cform label span {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(226, 232, 244, 0.5);
+  }
+  .cform input, .cform textarea {
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 16px;
+    color: var(--moon);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(74, 234, 255, 0.25);
+    border-radius: 12px;
+    padding: 13px 15px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    resize: vertical;
+  }
+  .cform input:focus, .cform textarea:focus {
+    outline: none;
+    border-color: rgba(74, 234, 255, 0.6);
+    box-shadow: 0 0 18px rgba(74, 234, 255, 0.2);
+  }
+  .cform .btn { align-self: flex-start; cursor: pointer; }
+  .cform-status { font-family: var(--font-body); font-weight: 400; font-size: 15px; color: var(--gold); min-height: 1.2em; }
+  .cform-status.err { color: var(--magenta); }
+
+  .contact-links {
+    margin-top: 34px;
+    text-align: center;
+    font-family: var(--font-body);
+    font-weight: 500;
+    letter-spacing: 0.1em;
+  }
+  .contact-links a { color: rgba(226, 232, 244, 0.7); text-decoration: none; transition: color 0.3s ease, text-shadow 0.3s ease; }
+  .contact-links a:hover { color: var(--cyan); text-shadow: 0 0 14px rgba(74, 234, 255, 0.5); }
+  .contact-links .sep { color: rgba(255, 255, 255, 0.3); margin: 0 14px; }
+
+  @media (max-width: 560px) { .row { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+  const form = document.querySelector('.cform') as HTMLFormElement | null;
+  if (form) {
+    const status = form.querySelector('.cform-status') as HTMLElement;
+    const endpoint = form.dataset.endpoint || '';
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      status.classList.remove('err');
+
+      if (endpoint.includes('REPLACE_ME')) {
+        status.classList.add('err');
+        status.textContent = 'This form is not connected yet. Add your Formspree ID to turn it on.';
+        return;
+      }
+
+      status.textContent = 'Sending your note...';
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { Accept: 'application/json' },
+          body: new FormData(form),
+        });
+        if (res.ok) {
+          form.reset();
+          status.textContent = 'Got it, thank you. You will hear back soon. Keep being magical.';
+        } else {
+          status.classList.add('err');
+          status.textContent = 'Something went sideways. Please try again, or reach out on Instagram.';
+        }
+      } catch {
+        status.classList.add('err');
+        status.textContent = 'Something went sideways. Please try again, or reach out on Instagram.';
+      }
+    });
+  }
+</script>

@@ -1,0 +1,167 @@
+---
+/**
+ * Constellation.astro - the gallery charted in stars.
+ * Maps over the art collection: one node per work, placed by its x/y percent,
+ * joined by lines that draw in on scroll. The bee (FaeBee) reads these nodes
+ * to trace the constellation as a guide. Clicking a node opens the Lightbox.
+ * Adding a painting never touches this file.
+ */
+import { getArt, FEATURED_SLUG } from '../lib/art';
+
+const works = await getArt();
+const indexOf = new Map(works.map((w, i) => [w.id, i]));
+
+// Build the joining lines, de-duplicated by undirected pair so a link
+// declared on either work (or both) draws exactly one line.
+type Line = { x1: number; y1: number; x2: number; y2: number };
+const lines: Line[] = [];
+const seen = new Set<string>();
+for (const w of works) {
+  for (const slug of w.data.links) {
+    const j = indexOf.get(slug);
+    if (j === undefined) continue;
+    const key = [w.id, slug].sort().join('|');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const o = works[j];
+    lines.push({ x1: w.data.x, y1: w.data.y, x2: o.data.x, y2: o.data.y });
+  }
+}
+---
+
+<section id="gallery" class="section">
+  <div class="reveal">
+    <div class="eyebrow">The Gallery</div>
+    <h2 class="section-title">Charted in Stars</h2>
+    <p class="section-desc">Each work is a point of light. Follow the bee, or pick a star to step inside.</p>
+  </div>
+
+  <div class="constellation reveal" role="group" aria-label="Gallery constellation">
+    <svg class="lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      {lines.map((l) => (
+        <line
+          x1={l.x1}
+          y1={l.y1}
+          x2={l.x2}
+          y2={l.y2}
+          pathLength="1"
+        />
+      ))}
+    </svg>
+
+    {works.map((w, i) => (
+      <button
+        class:list={['c-node', { featured: w.id === FEATURED_SLUG, sold: w.data.status === 'sold' }]}
+        style={`left:${w.data.x}%; top:${w.data.y}%`}
+        data-index={i}
+        type="button"
+        aria-label={`Open ${w.data.title}, ${w.data.medium}`}
+      >
+        <span class="dot"></span>
+        <span class="label">{w.data.title}</span>
+      </button>
+    ))}
+  </div>
+</section>
+
+<style>
+  .constellation {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3 / 2;
+    max-height: 70vh;
+    margin-top: 36px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 18px;
+    background: radial-gradient(ellipse 70% 60% at 50% 45%, rgba(74, 234, 255, 0.05), transparent 70%);
+  }
+
+  .lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .lines line {
+    stroke: rgba(74, 234, 255, 0.45);
+    stroke-width: 1px;
+    vector-effect: non-scaling-stroke;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    filter: drop-shadow(0 0 3px rgba(74, 234, 255, 0.5));
+  }
+  .constellation.drawn .lines line {
+    transition: stroke-dashoffset 1.4s ease;
+    stroke-dashoffset: 0;
+  }
+
+  .c-node {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    color: var(--moon);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .c-node .dot {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 10px var(--cyan), 0 0 22px rgba(74, 234, 255, 0.6);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .c-node .label {
+    font-family: var(--font-head);
+    font-size: clamp(13px, 1.5vw, 18px);
+    color: rgba(240, 234, 214, 0.9);
+    text-shadow: 0 0 12px rgba(0, 0, 0, 0.8);
+    opacity: 0.85;
+    white-space: nowrap;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  .c-node.featured .dot {
+    width: 20px;
+    height: 20px;
+    background: var(--gold);
+    box-shadow: 0 0 14px var(--gold), 0 0 34px rgba(233, 196, 106, 0.7);
+  }
+  .c-node.sold .dot { background: var(--magenta); box-shadow: 0 0 10px var(--magenta), 0 0 22px rgba(217, 70, 239, 0.6); }
+  .c-node:hover .dot, .c-node:focus-visible .dot { transform: scale(1.4); }
+  .c-node:hover .label, .c-node:focus-visible .label { opacity: 1; transform: translateY(2px); }
+
+  @media (max-width: 640px) {
+    .constellation { aspect-ratio: 1 / 1; }
+    .c-node .label { font-size: 11px; }
+  }
+</style>
+
+<script>
+  // draw the lines in when the map scrolls into view
+  const map = document.querySelector('.constellation');
+  if (map) {
+    const io = new IntersectionObserver(
+      (entries, obs) => {
+        for (const e of entries) {
+          if (e.isIntersecting) { map.classList.add('drawn'); obs.disconnect(); }
+        }
+      },
+      { threshold: 0.25 }
+    );
+    io.observe(map);
+
+    // open the lightbox on node click (delegated)
+    map.addEventListener('click', (ev) => {
+      const node = (ev.target as HTMLElement).closest('.c-node') as HTMLElement | null;
+      if (!node) return;
+      const index = Number(node.dataset.index);
+      window.dispatchEvent(new CustomEvent('lightbox:open', { detail: { index } }));
+    });
+  }
+</script>

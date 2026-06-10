@@ -1,0 +1,66 @@
+---
+/**
+ * Nav.astro - static top bar. Wordmark on the left, section links and the
+ * two real external links on the right. External links open in a new tab.
+ */
+const INSTAGRAM = 'https://www.instagram.com/bee__magical/';
+const KOFI = 'https://ko-fi.com/bee_magical';
+---
+
+<nav class="bar">
+  <a class="mark-link" href="#top" aria-label="Bee Magical, home">
+    <img class="mark" src="/logo/bee-magical-wordmark.png" alt="Bee Magical" width="1030" height="242" />
+  </a>
+  <div class="links">
+    <a href="#gallery">Gallery</a>
+    <a href="#featured">Featured</a>
+    <a href="#about">About</a>
+    <a href="#contact">Contact</a>
+    <a href={INSTAGRAM} target="_blank" rel="noopener">Instagram</a>
+    <a href={KOFI} target="_blank" rel="noopener">Ko-fi</a>
+  </div>
+</nav>
+
+<style>
+  nav.bar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 36px;
+    background: linear-gradient(to bottom, rgba(3, 5, 14, 0.78), rgba(3, 5, 14, 0));
+    backdrop-filter: blur(6px);
+  }
+  .mark-link { display: inline-flex; }
+  .mark {
+    height: 34px;
+    width: auto;
+    filter: drop-shadow(0 0 14px rgba(217, 70, 239, 0.4));
+  }
+  .links { display: flex; gap: 28px; align-items: center; }
+  .links a {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    color: rgba(226, 232, 244, 0.6);
+    text-decoration: none;
+    transition: color 0.3s ease, text-shadow 0.3s ease;
+  }
+  .links a:hover { color: var(--cyan); text-shadow: 0 0 14px rgba(74, 234, 255, 0.5); }
+
+  @media (max-width: 760px) {
+    nav.bar { padding: 14px 20px; }
+    .links { gap: 16px; }
+    .links a:nth-child(2) { display: none; } /* hide Featured to save room */
+  }
+  @media (max-width: 560px) {
+    .mark { height: 28px; }
+    .links { gap: 14px; }
+    .links a { font-size: 11px; letter-spacing: 0.06em; }
+    /* the external links also live in Contact and the footer */
+    .links a:nth-child(5), .links a:nth-child(6) { display: none; }
+  }
+</style>

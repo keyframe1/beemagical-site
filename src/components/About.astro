@@ -1,0 +1,42 @@
+---
+/**
+ * About.astro - short, art-focused. Only location reference is Louisiana.
+ * No em dashes anywhere.
+ */
+---
+
+<section id="about" class="section about">
+  <div class="reveal">
+    <div class="eyebrow">About</div>
+    <h2 class="section-title">Bright Against the Dark</h2>
+  </div>
+  <div class="about-body reveal">
+    <p>
+      Bee Magical paints bright, fae-touched creatures and the wild things they live
+      among. Every piece is built to glow: loud color held against a deep, quiet night.
+    </p>
+    <p>
+      Originals are one of a kind. Many are also offered as prints so a little of that
+      light can hang anywhere. New work lands in its own small constellation as it is finished.
+    </p>
+    <p class="made">Made in Louisiana.</p>
+  </div>
+</section>
+
+<style>
+  .about-body { max-width: 720px; margin: 28px auto 0; text-align: center; }
+  .about-body p {
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: clamp(17px, 2.1vw, 20px);
+    color: rgba(226, 232, 244, 0.82);
+    margin-bottom: 18px;
+  }
+  .about-body .made {
+    font-family: var(--font-head);
+    font-size: clamp(20px, 3vw, 28px);
+    color: var(--gold);
+    text-shadow: 0 0 22px rgba(233, 196, 106, 0.3);
+    margin-top: 8px;
+  }
+</style>

@@ -1,0 +1,15 @@
+{
+  "title": "Possum Moon",
+  "medium": "Acrylic on canvas",
+  "dimensions": "12 x 12 in",
+  "year": 2026,
+  "price": "$680",
+  "status": "available",
+  "prints": true,
+  "printsFrom": 45,
+  "image": "../../assets/art/possum-moon.svg",
+  "note": "A small pink nose lifted to a big bright moon. Nobody told it to be afraid of the dark.",
+  "x": 79,
+  "y": 49,
+  "links": ["hummingbird-trumpet-vine"]
+}
