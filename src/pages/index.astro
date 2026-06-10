@@ -9,6 +9,7 @@ import Constellation from '../components/Constellation.astro';
 import Featured from '../components/Featured.astro';
 import ArtStrip from '../components/ArtStrip.astro';
 import Commissions from '../components/Commissions.astro';
+import Watch from '../components/Watch.astro';
 import Stickers from '../components/Stickers.astro';
 import Contact from '../components/Contact.astro';
 import Footer from '../components/Footer.astro';
@@ -25,7 +26,7 @@ const artist = {
   url: site,
   jobTitle: 'Painter',
   description: 'Space and aurora paintings, plus portrait and pet commissions. Made in Louisiana.',
-  sameAs: ['https://www.instagram.com/bee__magical/', 'https://ko-fi.com/bee_magical'],
+  sameAs: ['https://www.instagram.com/bee__magical/', 'https://www.youtube.com/@beemagicalart', 'https://ko-fi.com/bee_magical'],
 };
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -62,6 +63,7 @@ const jsonLd = {
     <Featured />
     <ArtStrip />
     <Commissions />
+    <Watch />
     <Stickers />
     <Contact />
   </main>
