@@ -13,13 +13,18 @@ import { getArt } from '../lib/art';
 
 const works = await getArt();
 
-function priceLine(d: (typeof works)[number]['data']): string {
-  let main = '';
-  if (d.status === 'sold') main = 'Sold';
-  else if (d.status === 'prints-only') main = 'Original sold';
-  else main = d.price;
-  if (d.prints && d.printsFrom) main += ` . Prints from $${d.printsFrom}`;
-  return main;
+// Sold and prints-only pieces stay in the gallery as portfolio examples; a
+// quiet status badge near the title marks them unavailable and the buy line
+// is dropped. The price line is reserved for pieces that are still available
+// (or that have a stated prints option).
+function badgeFor(d: (typeof works)[number]['data']): string | null {
+  if (d.status === 'sold') return 'Sold';
+  if (d.status === 'prints-only') return 'Original sold';
+  return null;
+}
+function printsLine(d: (typeof works)[number]['data']): string | null {
+  if (d.prints && d.printsFrom) return `Prints from $${d.printsFrom}`;
+  return null;
 }
 
 // a faint constellation behind the viewer, echoing the gallery chart
@@ -42,7 +47,7 @@ const bgStars = works.map((w) => ({ x: w.data.x, y: w.data.y }));
 
   <div class="lb-stage">
     {works.map((w, i) => (
-      <figure class="lb-figure" data-index={i}>
+      <figure class:list={['lb-figure', { sold: badgeFor(w.data) !== null }]} data-index={i}>
         <div class="lb-imgwrap">
           <Image
             src={w.data.image}
@@ -54,9 +59,13 @@ const bgStars = works.map((w) => ({ x: w.data.x, y: w.data.y }));
           />
         </div>
         <figcaption class="lb-cap">
-          <h3 class="lb-title">{w.data.title}</h3>
+          <div class="lb-titlerow">
+            <h3 class="lb-title">{w.data.title}</h3>
+            {badgeFor(w.data) && <span class="lb-badge">{badgeFor(w.data)}</span>}
+          </div>
           <p class="lb-sub">{[w.data.medium, w.data.dimensions, w.data.year].filter(Boolean).join(' . ')}</p>
-          <p class="lb-price">{priceLine(w.data)}</p>
+          {badgeFor(w.data) === null && <p class="lb-price">{w.data.price}</p>}
+          {printsLine(w.data) && <p class="lb-price">{printsLine(w.data)}</p>}
           <p class="lb-note">{w.data.note}</p>
           <a class="btn lb-inquire" href="#contact" data-close>Inquire</a>
         </figcaption>
@@ -118,7 +127,23 @@ const bgStars = works.map((w) => ({ x: w.data.x, y: w.data.y }));
   .lb-img { width: 100%; height: auto; max-height: 80vh; object-fit: contain; display: block; }
 
   .lb-cap { text-align: left; }
+  .lb-titlerow { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; }
   .lb-title { font-family: var(--font-head); font-size: clamp(28px, 4vw, 44px); color: var(--moon); line-height: 1.1; }
+  /* a quiet celestial status pill for sold and prints-only pieces */
+  .lb-badge {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--moon);
+    background: rgba(217, 70, 239, 0.18);
+    border: 1px solid rgba(217, 70, 239, 0.55);
+    border-radius: var(--radius-pill);
+    padding: 4px 13px;
+    box-shadow: 0 0 16px rgba(217, 70, 239, 0.3);
+    white-space: nowrap;
+  }
   .lb-sub { font-family: var(--font-body); font-weight: 300; font-size: 13px; letter-spacing: 0.06em; color: rgba(226, 232, 244, 0.55); margin-top: 10px; }
   .lb-price { font-family: var(--font-body); font-weight: 500; font-size: 15px; color: var(--cyan); margin-top: 8px; }
   .lb-note { font-family: var(--font-body); font-weight: 300; font-size: 16px; color: rgba(226, 232, 244, 0.82); margin-top: 16px; }

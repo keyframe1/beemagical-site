@@ -64,6 +64,7 @@ for (const w of works) {
       >
         <span class="peek">
           <Image src={w.data.image} alt="" width={280} loading="lazy" />
+          {w.data.status === 'sold' && <span class="sold-tag">Sold</span>}
         </span>
         <span class="dot"></span>
         <span class="label">{w.data.title}</span>
@@ -77,8 +78,16 @@ for (const w of works) {
        threshold early and the gallery reads as blank in portrait. -->
   <div class="c-cards" role="group" aria-label="Gallery works">
     {works.map((w, i) => (
-      <button class="c-card reveal" data-index={i} type="button" aria-label={`Open ${w.data.title}, ${w.data.medium}`}>
-        <Image src={w.data.image} alt={`${w.data.title}. ${w.data.note}`} width={640} loading="lazy" />
+      <button
+        class:list={['c-card reveal', { sold: w.data.status === 'sold' }]}
+        data-index={i}
+        type="button"
+        aria-label={w.data.status === 'sold' ? `Open ${w.data.title}, ${w.data.medium}, sold` : `Open ${w.data.title}, ${w.data.medium}`}
+      >
+        <span class="cc-art">
+          <Image src={w.data.image} alt={`${w.data.title}. ${w.data.note}`} width={640} loading="lazy" />
+          {w.data.status === 'sold' && <span class="sold-tag">Sold</span>}
+        </span>
         <span class="cc-body">
           <span class="cc-title">{w.data.title}</span>
           <span class="cc-sub">{w.data.medium}</span>
@@ -200,6 +209,28 @@ for (const w of works) {
     transform: translateX(-50%) translateY(0) scale(1);
   }
 
+  /* a small celestial corner pill marking a piece as sold. It rides the
+     work's image (peek preview here, the card thumbnail on small screens)
+     and matches the magenta of the sold node dot. Static, no animation. */
+  .sold-tag {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 2;
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--moon);
+    background: rgba(217, 70, 239, 0.24);
+    border: 1px solid rgba(217, 70, 239, 0.6);
+    border-radius: var(--radius-pill);
+    padding: 3px 10px;
+    box-shadow: 0 0 14px rgba(217, 70, 239, 0.35);
+    pointer-events: none;
+  }
+
   .c-node.featured .dot {
     width: 20px;
     height: 20px;
@@ -255,6 +286,18 @@ for (const w of works) {
       color: var(--moon);
     }
     .c-card :global(img) { width: 100%; height: auto; display: block; }
+    .cc-art { display: block; position: relative; }
+    /* sold cards read as unavailable with a mild dim and desaturation that
+       still lets the art show. On touch there is no hover, so the dim stays
+       gentle; where hover or focus exists the piece returns to full vibrancy. */
+    .c-card.sold .cc-art :global(img) {
+      filter: saturate(0.72) brightness(0.84);
+      transition: filter 0.4s ease;
+    }
+    .c-card.sold:hover .cc-art :global(img),
+    .c-card.sold:focus-visible .cc-art :global(img) {
+      filter: none;
+    }
     .cc-body {
       display: flex;
       align-items: baseline;

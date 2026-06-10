@@ -18,19 +18,15 @@
  * a faint cyan-into-violet line anchored by glowing corner stars (the same
  * star-dot language as the gallery and commission cards), lighting up in
  * cyan on focus. Only the field interiors carry a whisper of darkening and
- * blur for legibility. The inquiry form posts to Formspree. The external
- * links (Instagram, Ko-fi) live in the nav and the footer, not here.
- * No em dashes in any copy.
+ * blur for legibility. There is no backend: on submit the form builds a
+ * mailto link from the fields and opens the visitor's mail client, with a
+ * direct email link as a fallback. Her address is assembled in JavaScript,
+ * never placed raw in the static HTML, for light spam protection. The
+ * external links (Instagram, Ko-fi) live in the nav and the footer, not
+ * here. No em dashes in any copy.
  */
 import { Image } from 'astro:assets';
 import selfPortrait from '../assets/art/bee-untitled-self.jpg';
-
-// ==========================================================================
-//  FORMSPREE ENDPOINT
-//  Paste your real Formspree form ID below (from your Formspree dashboard).
-//  It looks like: https://formspree.io/f/abcdwxyz
-// ==========================================================================
-const FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_ME';
 ---
 
 <section id="contact" class="contact-shell">
@@ -51,7 +47,7 @@ const FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_ME';
   <div class="section contact">
     <h2 class="sr-only">Contact</h2>
 
-    <form class="cform reveal" data-endpoint={FORMSPREE_ENDPOINT}>
+    <form class="cform reveal">
       <div class="row">
         <label>
           <span>Name</span>
@@ -92,6 +88,7 @@ const FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_ME';
         <i class="fstar br" aria-hidden="true"></i>
       </button>
       <p class="cform-status" role="status" aria-live="polite"></p>
+      <p class="cform-alt" hidden>or email <a class="cmail" href="#"></a></p>
     </form>
   </div>
 </section>
@@ -338,6 +335,26 @@ const FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_ME';
   }
   .cform-status.err { color: var(--magenta); }
 
+  /* the quiet direct-email fallback under the form */
+  .cform-alt {
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 14px;
+    color: rgba(226, 232, 244, 0.6);
+    text-shadow: 0 1px 8px rgba(3, 5, 14, 0.9);
+  }
+  .cform-alt[hidden] { display: none; }
+  .cform-alt .cmail {
+    color: var(--cyan);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(74, 234, 255, 0.35);
+    transition: text-shadow 0.3s ease, border-color 0.3s ease;
+  }
+  .cform-alt .cmail:hover {
+    text-shadow: 0 0 14px rgba(74, 234, 255, 0.5);
+    border-color: rgba(74, 234, 255, 0.7);
+  }
+
   @media (max-width: 560px) {
     .row { grid-template-columns: 1fr; }
   }
@@ -352,40 +369,40 @@ const FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_ME';
 </style>
 
 <script>
-  // ---------- form submit ----------
+  // ---------- form: build a mailto and open the visitor's mail app ----------
+  // No backend. Her address is assembled here, never sitting raw in the
+  // static HTML, for light spam protection. Submit prefills a message; the
+  // fallback link below opens a blank email to the same address.
+  const ADDR = ['beemagicalart', 'gmail.com'].join('@');
+
   const form = document.querySelector('.cform') as HTMLFormElement | null;
   if (form) {
     const status = form.querySelector('.cform-status') as HTMLElement;
-    const endpoint = form.dataset.endpoint || '';
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', (e) => {
       e.preventDefault();
       status.classList.remove('err');
 
-      if (endpoint.includes('REPLACE_ME')) {
-        status.classList.add('err');
-        status.textContent = 'This form is not connected yet. Add your Formspree ID to turn it on.';
-        return;
-      }
+      const data = new FormData(form);
+      const name = (data.get('name') || '').toString().trim();
+      const email = (data.get('email') || '').toString().trim();
+      const message = (data.get('message') || '').toString().trim();
 
-      status.textContent = 'Sending your note...';
-      try {
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { Accept: 'application/json' },
-          body: new FormData(form),
-        });
-        if (res.ok) {
-          form.reset();
-          status.textContent = 'Got it, thank you. You will hear back soon. Keep being magical.';
-        } else {
-          status.classList.add('err');
-          status.textContent = 'Something went sideways. Please try again, or reach out on Instagram.';
-        }
-      } catch {
-        status.classList.add('err');
-        status.textContent = 'Something went sideways. Please try again, or reach out on Instagram.';
-      }
+      const subject = `Bee Magical inquiry from ${name || 'a visitor'}`;
+      const body = `Name: ${name}\nEmail: ${email}\n\n${message}`;
+      const href = `mailto:${ADDR}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+      status.textContent = 'Opening your email app with this message ready to send...';
+      window.location.href = href;
     });
+  }
+
+  // reveal the direct-email fallback, assembled in JS for the same reason
+  const alt = document.querySelector('.cform-alt') as HTMLElement | null;
+  const mail = document.querySelector('.cmail') as HTMLAnchorElement | null;
+  if (alt && mail) {
+    mail.textContent = ADDR;
+    mail.href = `mailto:${ADDR}`;
+    alt.hidden = false;
   }
 
   // ---------- cosmic thunder + constellation gating ----------
