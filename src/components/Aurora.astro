@@ -1,7 +1,7 @@
 ---
 /**
- * Aurora.astro - a soft northern-lights veil for the Contact section, echoing
- * Hannah's aurora paintings. Three heavily blurred curtains in her palette
+ * Aurora.astro - a soft northern-lights veil behind the About section,
+ * echoing Hannah's aurora paintings. Three heavily blurred curtains in her palette
  * (green, teal, magenta, violet) undulate and drift on offset clocks so the
  * loop never reads as a loop. Blend mode screen so only the colored light
  * shows; a mask fades everything downward into the dark sky.
@@ -27,11 +27,11 @@
     overflow: hidden;
     pointer-events: none;
     mix-blend-mode: screen;
-    opacity: 0.35;
-    /* the lights live in the upper sky and dissolve into the dark on every
+    opacity: 0.3;
+    /* the lights fill the section softly and dissolve into the dark on every
        side, so the clipped blur never shows a rectangle edge */
-    mask-image: radial-gradient(ellipse 82% 68% at 50% 16%, #000 26%, transparent 72%);
-    -webkit-mask-image: radial-gradient(ellipse 82% 68% at 50% 16%, #000 26%, transparent 72%);
+    mask-image: radial-gradient(ellipse 84% 78% at 50% 34%, #000 30%, transparent 76%);
+    -webkit-mask-image: radial-gradient(ellipse 84% 78% at 50% 34%, #000 30%, transparent 76%);
   }
 
   /* each curtain: a tall band of light, heavily blurred so its edges are

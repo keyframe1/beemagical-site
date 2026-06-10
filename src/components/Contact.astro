@@ -1,11 +1,22 @@
 ---
 /**
- * Contact.astro - inquiry form wired to Formspree. The external links
- * (Instagram, Ko-fi) live in the nav and the footer, not here. No em dashes
- * in any copy. A soft aurora veil (Aurora.astro) glows behind everything,
- * upper sky only; the form and labels sit above it and stay fully readable.
+ * Contact.astro - the calm closer. Hannah's self-portrait looms behind the
+ * whole section as a full-bleed background: screen blend so its dark starry
+ * ground merges into the page sky, a radial edge mask so only she emerges,
+ * no rectangle. Her face reads in the open upper area behind the heading;
+ * the form sits in the lower portion so she stays visible. A quiet presence
+ * at rest; every 9 to 16 seconds a soft cosmic-thunder flash eases her up
+ * with a cyan and violet glow and a faint lightning streak, holds a breath,
+ * then fades back over about a second. Soft attack only, never an instant
+ * strobe, gated to the section being in view and the tab visible, opacity
+ * only. Reduced motion: no flashing, fixed gentle opacity.
+ * The form has no panel: it floats on the sky, and only the input fields
+ * carry a soft translucent backing for legibility. The inquiry form posts
+ * to Formspree. The external links (Instagram, Ko-fi) live in the nav and
+ * the footer, not here. No em dashes in any copy.
  */
-import Aurora from './Aurora.astro';
+import { Image } from 'astro:assets';
+import selfPortrait from '../assets/art/bee-untitled-self.jpg';
 
 // ==========================================================================
 //  FORMSPREE ENDPOINT
@@ -15,39 +26,127 @@ import Aurora from './Aurora.astro';
 const FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_ME';
 ---
 
-<section id="contact" class="section contact">
-  <Aurora />
-
-  <div class="reveal">
-    <h2 class="section-title">Contact</h2>
-    <p class="section-desc">Commissions, prints, and originals.</p>
+<section id="contact" class="contact-shell">
+  <!-- the looming portrait: blended, masked, opacity-animated only -->
+  <div class="presence" aria-hidden="true">
+    <Image
+      class="presence-img"
+      src={selfPortrait}
+      alt=""
+      width={1600}
+      loading="lazy"
+    />
+    <div class="presence-glow"></div>
+    <div class="presence-bolt b1"></div>
+    <div class="presence-bolt b2"></div>
   </div>
 
-  <form class="cform reveal" data-endpoint={FORMSPREE_ENDPOINT}>
-    <div class="row">
-      <label>
-        <span>Name</span>
-        <input type="text" name="name" autocomplete="name" required />
-      </label>
-      <label>
-        <span>Email</span>
-        <input type="email" name="email" autocomplete="email" required />
-      </label>
+  <div class="section contact">
+    <div class="reveal">
+      <h2 class="section-title">Contact</h2>
+      <p class="section-desc">Commissions, prints, and originals.</p>
     </div>
-    <label>
-      <span>Which work, and what are you hoping for</span>
-      <textarea name="message" rows="4" required></textarea>
-    </label>
-    <button class="btn" type="submit">Send it</button>
-    <p class="cform-status" role="status" aria-live="polite"></p>
-  </form>
+
+    <form class="cform reveal" data-endpoint={FORMSPREE_ENDPOINT}>
+      <div class="row">
+        <label>
+          <span>Name</span>
+          <input type="text" name="name" autocomplete="name" required />
+        </label>
+        <label>
+          <span>Email</span>
+          <input type="email" name="email" autocomplete="email" required />
+        </label>
+      </div>
+      <label>
+        <span>Which work, and what are you hoping for</span>
+        <textarea name="message" rows="4" required></textarea>
+      </label>
+      <button class="btn" type="submit">Send it</button>
+      <p class="cform-status" role="status" aria-live="polite"></p>
+    </form>
+  </div>
 </section>
 
 <style>
-  /* the section hosts the aurora veil; content stacks above it */
-  .contact { position: relative; max-width: 760px; }
-  .contact .reveal, .contact .cform { position: relative; z-index: 1; }
-  .cform { margin-top: 30px; display: flex; flex-direction: column; gap: 18px; }
+  /* full-bleed stage for the portrait; the content column sits inside */
+  .contact-shell {
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ---------- the looming presence ---------- */
+  .presence {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+  /* screen blend lets the painting's own dark starry ground vanish into the
+     page sky; the radial mask dissolves every edge so only she emerges */
+  .presence-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 16%;
+    mix-blend-mode: screen;
+    opacity: 0.18;
+    mask-image: radial-gradient(ellipse 74% 78% at 50% 32%, #000 34%, transparent 78%);
+    -webkit-mask-image: radial-gradient(ellipse 74% 78% at 50% 32%, #000 34%, transparent 78%);
+    will-change: opacity;
+  }
+  /* cyan and violet storm light that wakes with each flash */
+  .presence-glow {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    mix-blend-mode: screen;
+    background:
+      radial-gradient(ellipse 42% 34% at 38% 22%, rgba(74, 234, 255, 0.4), transparent 70%),
+      radial-gradient(ellipse 46% 38% at 64% 30%, rgba(155, 48, 255, 0.42), transparent 70%);
+    will-change: opacity;
+  }
+  /* faint cosmic lightning: thin blurred streaks near her, opacity only */
+  .presence-bolt {
+    position: absolute;
+    width: 3px;
+    height: 30%;
+    top: 4%;
+    opacity: 0;
+    border-radius: 3px;
+    background: linear-gradient(to bottom,
+      transparent 0%,
+      rgba(240, 234, 214, 0.9) 18%,
+      rgba(74, 234, 255, 0.8) 55%,
+      rgba(155, 48, 255, 0.5) 82%,
+      transparent 100%);
+    filter: blur(1.5px) drop-shadow(0 0 12px rgba(74, 234, 255, 0.7)) drop-shadow(0 0 28px rgba(155, 48, 255, 0.5));
+    will-change: opacity;
+  }
+  .presence-bolt.b1 { left: 30%; transform: rotate(14deg); }
+  .presence-bolt.b2 { left: 68%; transform: rotate(-11deg); height: 25%; top: 8%; }
+
+  /* ---------- the content column ---------- */
+  .contact {
+    position: relative;
+    z-index: 1;
+    max-width: 760px;
+  }
+  .contact .section-title,
+  .contact .section-desc { text-shadow: 0 2px 22px rgba(3, 5, 14, 0.85); }
+
+  /* the form floats on the sky in the lower portion of the section, leaving
+     the upper area open so her face reads behind the heading. No panel and
+     no solid fill anywhere around it. */
+  .cform {
+    margin-top: clamp(150px, 26vh, 290px);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
   .cform label { display: flex; flex-direction: column; gap: 7px; }
   .cform label span {
@@ -56,14 +155,20 @@ const FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_ME';
     font-size: 11px;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: rgba(226, 232, 244, 0.5);
+    color: rgba(226, 232, 244, 0.6);
+    text-shadow: 0 1px 8px rgba(3, 5, 14, 0.9);
   }
+  /* only the fields get a backing: a soft translucent wash plus a faint
+     blur of whatever drifts behind them, so they stay legible mid-flash
+     without boxing the whole form in */
   .cform input, .cform textarea {
     font-family: var(--font-body);
     font-weight: 300;
     font-size: 16px;
     color: var(--moon);
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(5, 7, 26, 0.45);
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
     border: 1px solid rgba(74, 234, 255, 0.25);
     border-radius: 12px;
     padding: 13px 15px;
@@ -76,13 +181,30 @@ const FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_ME';
     box-shadow: 0 0 18px rgba(74, 234, 255, 0.2);
   }
   .cform .btn { align-self: flex-start; cursor: pointer; }
-  .cform-status { font-family: var(--font-body); font-weight: 400; font-size: 15px; color: var(--gold); min-height: 1.2em; }
+  .cform-status {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: 15px;
+    color: var(--gold);
+    min-height: 1.2em;
+    text-shadow: 0 1px 8px rgba(3, 5, 14, 0.9);
+  }
   .cform-status.err { color: var(--magenta); }
 
-  @media (max-width: 560px) { .row { grid-template-columns: 1fr; } }
+  @media (max-width: 560px) {
+    .row { grid-template-columns: 1fr; }
+    .cform { margin-top: clamp(120px, 22vh, 220px); }
+  }
+
+  /* reduced motion: no lightning, no flicker; she simply rests in the sky */
+  @media (prefers-reduced-motion: reduce) {
+    .presence-img { opacity: 0.2; }
+    .presence-glow, .presence-bolt { display: none; }
+  }
 </style>
 
 <script>
+  // ---------- form submit ----------
   const form = document.querySelector('.cform') as HTMLFormElement | null;
   if (form) {
     const status = form.querySelector('.cform-status') as HTMLElement;
@@ -115,6 +237,94 @@ const FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_ME';
         status.classList.add('err');
         status.textContent = 'Something went sideways. Please try again, or reach out on Instagram.';
       }
+    });
+  }
+
+  // ---------- cosmic thunder ----------
+  // A soft flash every 9 to 16 seconds: ease her up to 0.55 with the glow
+  // over ~150-200ms, hold ~80ms, ease back down over ~1-1.4s, sometimes with
+  // one gentle secondary flicker on the way down. Opacity only, gated to the
+  // section being in view and the tab visible. Never under reduced motion.
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const shell = document.getElementById('contact');
+  const img = document.querySelector('.presence-img') as HTMLElement | null;
+  const glow = document.querySelector('.presence-glow') as HTMLElement | null;
+  const bolts = Array.from(document.querySelectorAll('.presence-bolt')) as HTMLElement[];
+
+  if (!reduce && shell && img && glow && 'IntersectionObserver' in window) {
+    let inView = false;
+    let timer = 0;
+
+    const schedule = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(flash, 9000 + Math.random() * 7000);
+    };
+
+    function flash() {
+      if (!inView || document.hidden) return; // re-armed when we come back
+      const attack = 150 + Math.random() * 50;
+      const hold = 80;
+      const decay = 1000 + Math.random() * 400;
+      const total = attack + hold + decay;
+      const at = (t: number) => Math.min(t / total, 1);
+      const flicker = Math.random() < 0.5;
+
+      // she emerges from the dark on the lightning, then fades
+      const imgFrames: Keyframe[] = [
+        { opacity: 0.18, easing: 'ease-out' },
+        { opacity: 0.55, offset: at(attack), easing: 'linear' },
+        { opacity: 0.55, offset: at(attack + hold), easing: 'ease-in-out' },
+      ];
+      if (flicker) {
+        imgFrames.push(
+          { opacity: 0.32, offset: at(attack + hold + decay * 0.4), easing: 'ease-in-out' },
+          { opacity: 0.4, offset: at(attack + hold + decay * 0.55), easing: 'ease-out' }
+        );
+      }
+      imgFrames.push({ opacity: 0.18 });
+      img.animate(imgFrames, { duration: total });
+
+      glow.animate(
+        [
+          { opacity: 0, easing: 'ease-out' },
+          { opacity: 0.55, offset: at(attack), easing: 'linear' },
+          { opacity: 0.55, offset: at(attack + hold), easing: 'ease-out' },
+          { opacity: 0 },
+        ],
+        { duration: total }
+      );
+
+      // one streak per flash, fading a little faster than she does
+      const bolt = bolts[(Math.random() * bolts.length) | 0];
+      bolt?.animate(
+        [
+          { opacity: 0, easing: 'ease-out' },
+          { opacity: 0.5, offset: at(attack), easing: 'linear' },
+          { opacity: 0.5, offset: at(attack + hold), easing: 'ease-out' },
+          { opacity: 0, offset: Math.min(at(attack + hold + decay * 0.6), 1) },
+          { opacity: 0 },
+        ],
+        { duration: total }
+      );
+
+      schedule();
+    }
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          inView = e.isIntersecting;
+          if (inView && !document.hidden) schedule();
+          else window.clearTimeout(timer);
+        }
+      },
+      { threshold: 0.15 }
+    );
+    io.observe(shell);
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) window.clearTimeout(timer);
+      else if (inView) schedule();
     });
   }
 </script>

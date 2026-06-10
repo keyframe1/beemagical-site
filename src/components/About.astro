@@ -1,60 +1,23 @@
 ---
 /**
- * About.astro - Hannah looms behind her own section. Her self-portrait fills
- * the section as a blended, edge-masked background: screen blend so its dark
- * starry ground merges into the page sky and only she emerges, no rectangle
- * edge. A quiet presence at rest; every 9 to 16 seconds a soft cosmic-thunder
- * flash eases her up out of the dark with a cyan and violet glow and a faint
- * lightning streak, holds a breath, then fades her back over about a second.
- * Soft attack only, never an instant strobe, gated to the section being in
- * view and the tab visible. The Return time-lapse stays as a single framed
- * process portal above her, with the star-corner celestial frame.
- * Reduced motion: no flashing at all; she rests at a fixed gentle opacity.
- * No prices and no em dashes anywhere.
+ * About.astro - the light interlude: heading, a short statement, and three
+ * stat cards, with the aurora veil (Aurora.astro) drifting behind the whole
+ * section as a soft full-section background. The looming self-portrait and
+ * its cosmic thunder now live behind Contact, and the process time-lapse
+ * lives in Commissions. No prices and no em dashes anywhere.
  */
-import { Image } from 'astro:assets';
-import selfPortrait from '../assets/art/bee-untitled-self.jpg';
+import Aurora from './Aurora.astro';
 ---
 
 <section id="about" class="section about">
-  <!-- the looming portrait: blended, masked, opacity-animated only -->
-  <div class="presence" aria-hidden="true">
-    <Image
-      class="presence-img"
-      src={selfPortrait}
-      alt=""
-      width={1400}
-      loading="lazy"
-    />
-    <div class="presence-glow"></div>
-    <div class="presence-bolt b1"></div>
-    <div class="presence-bolt b2"></div>
-  </div>
+  <Aurora />
 
   <div class="reveal">
     <h2 class="section-title">About</h2>
+    <p class="section-desc">
+      Hannah is a painter of bright, fae-touched creatures and deep night skies. Made in Louisiana.
+    </p>
   </div>
-
-  <figure class="about-panel reveal">
-    <span class="ap-star tl" aria-hidden="true"></span>
-    <span class="ap-star tr" aria-hidden="true"></span>
-    <span class="ap-star bl" aria-hidden="true"></span>
-    <span class="ap-star br" aria-hidden="true"></span>
-    <video
-      class="about-clip"
-      muted
-      loop
-      playsinline
-      preload="metadata"
-      poster="/video/celestial-process-poster.jpg"
-      aria-hidden="true"
-      data-autovideo
-    >
-      <source src="/video/celestial-process.webm" type="video/webm" />
-      <source src="/video/celestial-process.mp4" type="video/mp4" />
-    </video>
-    <figcaption class="ap-cap">Watch a piece come to life.</figcaption>
-  </figure>
 
   <div class="stats">
     <div class="stat reveal"><span class="stat-big">Originals</span><span class="stat-sub">one of a kind</span></div>
@@ -64,109 +27,11 @@ import selfPortrait from '../assets/art/bee-untitled-self.jpg';
 </section>
 
 <style>
+  /* the section hosts the aurora veil; everything else stacks above it */
   .about { position: relative; }
-
-  /* ---------- the looming presence ---------- */
-  .presence {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-    pointer-events: none;
-    z-index: 0;
-  }
-  /* screen blend lets the painting's own dark starry ground vanish into the
-     page sky; the radial mask dissolves every edge so only she emerges */
-  .presence-img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: 50% 22%;
-    mix-blend-mode: screen;
-    opacity: 0.16;
-    mask-image: radial-gradient(ellipse 72% 68% at 50% 40%, #000 32%, transparent 76%);
-    -webkit-mask-image: radial-gradient(ellipse 72% 68% at 50% 40%, #000 32%, transparent 76%);
-    will-change: opacity;
-  }
-  /* cyan and violet storm light that wakes with each flash */
-  .presence-glow {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    mix-blend-mode: screen;
-    background:
-      radial-gradient(ellipse 42% 36% at 38% 26%, rgba(74, 234, 255, 0.4), transparent 70%),
-      radial-gradient(ellipse 46% 42% at 64% 34%, rgba(155, 48, 255, 0.42), transparent 70%);
-    will-change: opacity;
-  }
-  /* faint cosmic lightning: thin blurred streaks near her, opacity only */
-  .presence-bolt {
-    position: absolute;
-    width: 3px;
-    height: 34%;
-    top: 6%;
-    opacity: 0;
-    border-radius: 3px;
-    background: linear-gradient(to bottom,
-      transparent 0%,
-      rgba(240, 234, 214, 0.9) 18%,
-      rgba(74, 234, 255, 0.8) 55%,
-      rgba(155, 48, 255, 0.5) 82%,
-      transparent 100%);
-    filter: blur(1.5px) drop-shadow(0 0 12px rgba(74, 234, 255, 0.7)) drop-shadow(0 0 28px rgba(155, 48, 255, 0.5));
-    will-change: opacity;
-  }
-  .presence-bolt.b1 { left: 31%; transform: rotate(14deg); }
-  .presence-bolt.b2 { left: 67%; transform: rotate(-11deg); height: 28%; top: 10%; }
-
-  /* content stacks above her; a soft shadow keeps the heading crisp while
-     she flashes behind it */
-  .about > :not(.presence) { position: relative; z-index: 1; }
-  .about .section-title { text-shadow: 0 2px 22px rgba(3, 5, 14, 0.85); }
-
-  /* ---------- the framed process portal ---------- */
-  .about-panel {
-    position: relative;
-    margin: var(--space-4) auto 0;
-    padding: 0;
-    max-width: 540px;
-  }
-  /* an opaque deep ground under the clip so the flashes never wash it out */
-  .about-clip {
-    width: 100%;
-    display: block;
-    aspect-ratio: 1;
-    height: auto;
-    object-fit: cover;
-    border: 1px solid rgba(233, 196, 106, 0.4);
-    border-radius: var(--radius-md);
-    box-shadow: var(--glow-gold), var(--shadow-card);
-    background: #05071a;
-  }
-  .ap-star {
-    position: absolute;
-    width: 11px;
-    height: 11px;
-    background: radial-gradient(circle, #fff 0%, rgba(233, 196, 106, 0.9) 35%, transparent 70%);
-    pointer-events: none;
-    z-index: 1;
-    animation: tw 3.6s ease-in-out infinite;
-  }
-  .ap-star.tl { top: -5px; left: -5px; }
-  .ap-star.tr { top: -5px; right: -5px; animation-delay: 0.9s; }
-  .ap-star.bl { bottom: 26px; left: -5px; animation-delay: 1.8s; }
-  .ap-star.br { bottom: 26px; right: -5px; animation-delay: 2.7s; }
-  .ap-cap {
-    font-family: var(--font-body);
-    font-weight: 300;
-    font-size: 13px;
-    letter-spacing: 0.06em;
-    color: rgba(226, 232, 244, 0.55);
-    text-align: center;
-    margin-top: 12px;
-    text-shadow: 0 1px 10px rgba(3, 5, 14, 0.8);
-  }
+  .about .reveal, .about .stats { position: relative; z-index: 1; }
+  .about .section-title,
+  .about .section-desc { text-shadow: 0 2px 18px rgba(3, 5, 14, 0.8); }
 
   .stats {
     display: grid;
@@ -197,108 +62,7 @@ import selfPortrait from '../assets/art/bee-untitled-self.jpg';
   }
 
   @media (max-width: 640px) {
-    .about-panel { max-width: 420px; }
     .stats { grid-template-columns: 1fr; max-width: 420px; }
     .stat { padding: 16px 14px; }
   }
-
-  /* reduced motion: no lightning, no flicker; she simply rests in the sky */
-  @media (prefers-reduced-motion: reduce) {
-    .presence-img { opacity: 0.18; }
-    .presence-glow, .presence-bolt { display: none; }
-  }
 </style>
-
-<script>
-  import { manageVideo } from '../lib/video-client';
-  const clip = document.querySelector('.about-clip') as HTMLVideoElement | null;
-  if (clip) manageVideo(clip, { group: 'ambient' });
-
-  // ---------- cosmic thunder ----------
-  // A soft flash every 9 to 16 seconds: ease her up to 0.55 with the glow
-  // over ~150-200ms, hold ~80ms, ease back down over ~1-1.4s, sometimes with
-  // one gentle secondary flicker on the way down. Opacity only, gated to the
-  // section being in view and the tab visible. Never under reduced motion.
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const section = document.getElementById('about');
-  const img = document.querySelector('.presence-img') as HTMLElement | null;
-  const glow = document.querySelector('.presence-glow') as HTMLElement | null;
-  const bolts = Array.from(document.querySelectorAll('.presence-bolt')) as HTMLElement[];
-
-  if (!reduce && section && img && glow && 'IntersectionObserver' in window) {
-    let inView = false;
-    let timer = 0;
-
-    const schedule = () => {
-      window.clearTimeout(timer);
-      timer = window.setTimeout(flash, 9000 + Math.random() * 7000);
-    };
-
-    function flash() {
-      if (!inView || document.hidden) return; // re-armed when we come back
-      const attack = 150 + Math.random() * 50;
-      const hold = 80;
-      const decay = 1000 + Math.random() * 400;
-      const total = attack + hold + decay;
-      const at = (t: number) => Math.min(t / total, 1);
-      const flicker = Math.random() < 0.5;
-
-      // she emerges from the dark on the lightning, then fades
-      const imgFrames: Keyframe[] = [
-        { opacity: 0.16, easing: 'ease-out' },
-        { opacity: 0.55, offset: at(attack), easing: 'linear' },
-        { opacity: 0.55, offset: at(attack + hold), easing: 'ease-in-out' },
-      ];
-      if (flicker) {
-        imgFrames.push(
-          { opacity: 0.3, offset: at(attack + hold + decay * 0.4), easing: 'ease-in-out' },
-          { opacity: 0.38, offset: at(attack + hold + decay * 0.55), easing: 'ease-out' }
-        );
-      }
-      imgFrames.push({ opacity: 0.16 });
-      img.animate(imgFrames, { duration: total });
-
-      glow.animate(
-        [
-          { opacity: 0, easing: 'ease-out' },
-          { opacity: 0.55, offset: at(attack), easing: 'linear' },
-          { opacity: 0.55, offset: at(attack + hold), easing: 'ease-out' },
-          { opacity: 0 },
-        ],
-        { duration: total }
-      );
-
-      // one streak per flash, fading a little faster than she does
-      const bolt = bolts[(Math.random() * bolts.length) | 0];
-      bolt?.animate(
-        [
-          { opacity: 0, easing: 'ease-out' },
-          { opacity: 0.5, offset: at(attack), easing: 'linear' },
-          { opacity: 0.5, offset: at(attack + hold), easing: 'ease-out' },
-          { opacity: 0, offset: Math.min(at(attack + hold + decay * 0.6), 1) },
-          { opacity: 0 },
-        ],
-        { duration: total }
-      );
-
-      schedule();
-    }
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          inView = e.isIntersecting;
-          if (inView && !document.hidden) schedule();
-          else window.clearTimeout(timer);
-        }
-      },
-      { threshold: 0.15 }
-    );
-    io.observe(section);
-
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) window.clearTimeout(timer);
-      else if (inView) schedule();
-    });
-  }
-</script>

@@ -3,8 +3,11 @@
  * Commissions.astro - skill and process examples, not listings. Two real
  * portrait time-lapses from the footage play inside star-framed cards on
  * hover or when scrolled into view (one at a time), and two pet portraits
- * stand as stills. Captions name only the piece type. One button leads to
- * the contact section. No prices anywhere.
+ * stand as stills. Below the grid, The Return time-lapse sits as a single
+ * centered process portal in the same celestial frame, pairing with the
+ * portrait cards: muted, looping, lazy-started in view, paused offscreen or
+ * when the tab hides. Captions name only the piece type. One button leads
+ * to the contact section. No prices anywhere.
  */
 import { Image } from 'astro:assets';
 import taylor from '../assets/art/taylor.jpg';
@@ -75,6 +78,29 @@ const stills = [
       </figure>
     ))}
   </div>
+
+  <figure class="com-card process reveal">
+    <div class="com-frame">
+      <span class="com-star tl" aria-hidden="true"></span>
+      <span class="com-star br" aria-hidden="true"></span>
+      <video
+        class="process-clip"
+        muted
+        loop
+        playsinline
+        preload="metadata"
+        poster="/video/celestial-process-poster.jpg"
+        aria-hidden="true"
+      >
+        <source src="/video/celestial-process.webm" type="video/webm" />
+        <source src="/video/celestial-process.mp4" type="video/mp4" />
+      </video>
+    </div>
+    <figcaption class="com-cap">
+      <span class="com-type">Process</span>
+      <span class="com-note">Watch a piece come to life</span>
+    </figcaption>
+  </figure>
 
   <div class="com-cta reveal">
     <a class="btn" href="#contact">Start a commission</a>
@@ -152,6 +178,17 @@ const stills = [
     color: rgba(226, 232, 244, 0.55);
   }
 
+  /* the centered process portal under the grid: same celestial frame, its
+     clip square and always welcome to loop while on screen */
+  .com-card.process {
+    max-width: 480px;
+    margin: var(--space-4) auto 0;
+  }
+  .com-card.process .process-clip {
+    aspect-ratio: 1;
+    object-fit: cover;
+  }
+
   .com-cta { margin-top: var(--space-4); text-align: center; }
 
   @media (max-width: 900px) {
@@ -169,4 +206,8 @@ const stills = [
   ) as HTMLVideoElement[]) {
     manageVideo(v, { group: 'cards' });
   }
+  // the process portal is ambient: it loops whenever on screen instead of
+  // taking turns with the portrait cards
+  const portal = document.querySelector('.process-clip') as HTMLVideoElement | null;
+  if (portal) manageVideo(portal, { group: 'ambient' });
 </script>
