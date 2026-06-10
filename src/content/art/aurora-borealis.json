@@ -1,10 +1,11 @@
 {
+  "_todo": "PLACEHOLDER, confirm with Hannah: title, year, and price were generated for layout, not supplied.",
   "title": "Aurora",
   "medium": "Acrylic on canvas",
   "year": 2016,
-  "note": "Green fire arcs over the curve of the world while the Milky Way pours down to meet it.",
+  "note": "Acrylic on canvas. A green and purple aurora over a dark horizon.",
   "image": "../../assets/art/aurora-borealis.jpg",
   "x": 38,
   "y": 66,
-  "links": ["selkie-girl", "aurora-wolf"]
+  "links": ["aurora-wolf"]
 }

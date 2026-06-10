@@ -87,10 +87,13 @@
 
   .cta { position: relative; z-index: 1; margin-top: var(--space-4); display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
 
-  /* small screens swap the video for its poster still */
+  /* small screens swap the video for its poster still, and the hero sizes to
+     its content instead of holding a tall viewport block, so there is no dead
+     space between the wordmark and the gallery */
   @media (max-width: 640px) {
     .hero-clip { display: none; }
     .hero-poster { display: block; }
+    .hero { min-height: auto; padding: var(--space-4) 20px var(--space-3); }
   }
 </style>
 

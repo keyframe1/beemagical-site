@@ -71,10 +71,13 @@ for (const w of works) {
     ))}
   </div>
 
-  <!-- small screens: stacked cards instead of the chart -->
-  <div class="c-cards reveal" role="group" aria-label="Gallery works">
+  <!-- small screens: stacked cards instead of the chart. Each card reveals
+       on its own (not the whole grid at once): the grid is far taller than the
+       viewport, so a single reveal on the container never reaches the observer
+       threshold early and the gallery reads as blank in portrait. -->
+  <div class="c-cards" role="group" aria-label="Gallery works">
     {works.map((w, i) => (
-      <button class="c-card" data-index={i} type="button" aria-label={`Open ${w.data.title}, ${w.data.medium}`}>
+      <button class="c-card reveal" data-index={i} type="button" aria-label={`Open ${w.data.title}, ${w.data.medium}`}>
         <Image src={w.data.image} alt={`${w.data.title}. ${w.data.note}`} width={640} loading="lazy" />
         <span class="cc-body">
           <span class="cc-title">{w.data.title}</span>

@@ -1,7 +1,8 @@
 ---
 /**
- * Contact.astro - inquiry form wired to Formspree, plus the real external
- * links. No em dashes in any copy.
+ * Contact.astro - inquiry form wired to Formspree. The external links
+ * (Instagram, Ko-fi) live in the nav and the footer, not here. No em dashes
+ * in any copy.
  */
 
 // ==========================================================================
@@ -10,9 +11,6 @@
 //  It looks like: https://formspree.io/f/abcdwxyz
 // ==========================================================================
 const FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_ME';
-
-const INSTAGRAM = 'https://www.instagram.com/bee__magical/';
-const KOFI = 'https://ko-fi.com/bee_magical';
 ---
 
 <section id="contact" class="section contact">
@@ -39,12 +37,6 @@ const KOFI = 'https://ko-fi.com/bee_magical';
     <button class="btn" type="submit">Send it</button>
     <p class="cform-status" role="status" aria-live="polite"></p>
   </form>
-
-  <div class="contact-links reveal">
-    <a href={INSTAGRAM} target="_blank" rel="noopener">Instagram</a>
-    <span class="sep">.</span>
-    <a href={KOFI} target="_blank" rel="noopener">Ko-fi</a>
-  </div>
 </section>
 
 <style>
@@ -80,17 +72,6 @@ const KOFI = 'https://ko-fi.com/bee_magical';
   .cform .btn { align-self: flex-start; cursor: pointer; }
   .cform-status { font-family: var(--font-body); font-weight: 400; font-size: 15px; color: var(--gold); min-height: 1.2em; }
   .cform-status.err { color: var(--magenta); }
-
-  .contact-links {
-    margin-top: 34px;
-    text-align: center;
-    font-family: var(--font-body);
-    font-weight: 500;
-    letter-spacing: 0.1em;
-  }
-  .contact-links a { color: rgba(226, 232, 244, 0.7); text-decoration: none; transition: color 0.3s ease, text-shadow 0.3s ease; }
-  .contact-links a:hover { color: var(--cyan); text-shadow: 0 0 14px rgba(74, 234, 255, 0.5); }
-  .contact-links .sep { color: rgba(255, 255, 255, 0.3); margin: 0 14px; }
 
   @media (max-width: 560px) { .row { grid-template-columns: 1fr; } }
 </style>

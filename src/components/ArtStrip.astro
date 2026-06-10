@@ -18,6 +18,9 @@ import poodle from '../assets/art/poodle.jpg';
 import redheadGirl from '../assets/art/redhead-girl.jpg';
 import rottweiler from '../assets/art/rottweiler.jpg';
 import sketchGirl from '../assets/art/sketch-girl.jpg';
+// Portrait works kept out of the cosmic constellation but still shown here.
+import selkieGirl from '../assets/art/selkie-girl.jpg';
+import violetWoman from '../assets/art/violet-woman.jpg';
 
 const works = await getArt();
 const indexOf = new Map(works.map((w, i) => [w.id, i]));
@@ -33,6 +36,8 @@ const extras = [
   { image: boxerDog, alt: 'Pet portrait of a boxer dog' },
   { image: blackCat, alt: 'Pet portrait of a black cat with golden eyes' },
   { image: poodle, alt: 'Pet portrait of a white poodle' },
+  { image: selkieGirl, alt: 'Portrait of a selkie girl rising from green water' },
+  { image: violetWoman, alt: 'Portrait of a woman with violet hair against the stars' },
 ];
 
 // Interleave gallery works and extras so the strip mixes skies, fae, pets,
