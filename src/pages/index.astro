@@ -11,6 +11,38 @@ import About from '../components/About.astro';
 import Contact from '../components/Contact.astro';
 import Footer from '../components/Footer.astro';
 import Lightbox from '../components/Lightbox.astro';
+import { getArt } from '../lib/art';
+
+// JSON-LD: the artist plus one VisualArtwork per painting
+const works = await getArt();
+const site = Astro.site?.href ?? 'https://beemagical.art/';
+const artist = {
+  '@type': 'Person',
+  '@id': new URL('#artist', site).href,
+  name: 'Bee Magical',
+  url: site,
+  jobTitle: 'Painter',
+  description: 'Painter of bright, fae-touched creatures. Made in Louisiana.',
+  sameAs: ['https://www.instagram.com/bee__magical/', 'https://ko-fi.com/bee_magical'],
+};
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    artist,
+    ...works.map((w) => ({
+      '@type': 'VisualArtwork',
+      name: w.data.title,
+      artMedium: w.data.medium,
+      artform: 'Painting',
+      size: w.data.dimensions,
+      dateCreated: String(w.data.year),
+      description: w.data.note,
+      image: new URL(w.data.image.src, site).href,
+      creator: { '@id': artist['@id'] },
+      url: new URL('#gallery', site).href,
+    })),
+  ],
+};
 ---
 
 <Base>
@@ -34,17 +66,26 @@ import Lightbox from '../components/Lightbox.astro';
 
   <!-- full-image viewer (island) -->
   <Lightbox />
+
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />
 </Base>
 
 <script>
-  // scroll-reveal: reveal sections as they enter. CSS only hides them when
-  // JS is present (html.js), so a no-JS page still shows everything.
+  // scroll-reveal: reveal sections as they enter, staggering elements that
+  // arrive in the same observer batch. CSS only hides them when JS is
+  // present (html.js), so a no-JS page still shows everything.
   const items = document.querySelectorAll('.reveal');
   if ('IntersectionObserver' in window && items.length) {
     const io = new IntersectionObserver(
       (entries, obs) => {
+        let stagger = 0;
         for (const e of entries) {
-          if (e.isIntersecting) { e.target.classList.add('in'); obs.unobserve(e.target); }
+          if (e.isIntersecting) {
+            (e.target as HTMLElement).style.setProperty('--rd', `${stagger * 120}ms`);
+            stagger++;
+            e.target.classList.add('in');
+            obs.unobserve(e.target);
+          }
         }
       },
       { threshold: 0.12, rootMargin: '0px 0px -8% 0px' }

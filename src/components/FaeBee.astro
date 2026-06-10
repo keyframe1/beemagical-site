@@ -1,26 +1,50 @@
 ---
 /**
- * FaeBee.astro - the persistent flying bee island.
+ * FaeBee.astro - the persistent flying bee island, rigged in two layers:
+ * a wings image flapping behind a static body image (same 306x277 canvas).
+ *
+ * Layer stack (outer to inner):
+ *   #fae-bee     fixed position, translate3d flight path
+ *   .bee-roll    barrel rolls (rotateY) and the landing squash, WAAPI
+ *   .bee-inner   per-frame bank (rotateZ) + gentle bob
+ *   .bee-wings   continuous CSS flap, origin at the wing root,
+ *                motion-blurred during fast flight
+ *   .bee-body    static art, never restyled
  *
  * Lifecycle:
- *  1. intro  - flies an arc in over the loader, lands by the wordmark,
- *              fires a sparkle burst, then fades the loader away.
- *  2. wander - vertical position tracks scroll progress, horizontal sine
- *              drift, rotation banks into the turns, wings flutter (CSS).
- *  3. guide  - when the constellation is in view, dips in and traces the
- *              nodes between works, then resumes wandering.
+ *  1. intro  - flies an arc in over the loader, decelerates, lands by the
+ *              wordmark with a brief squash, fires a sparkle burst, then
+ *              fades the loader away.
+ *  2. idle   - hovers by the wordmark at a slow flap until the page scrolls.
+ *  3. wander - vertical position tracks scroll progress, horizontal sine
+ *              drift, banks into the turns. Occasional barrel rolls: on a
+ *              12-20s timer, on sharp direction changes, and on section
+ *              boundaries (cooldown guarded).
+ *  4. guide  - when the constellation is in view it slows to a calm flap
+ *              and traces the nodes, then lifts off and resumes wandering.
  *
  * Continuously emits cyan + gold sparkles and slower, larger fae-dust motes
- * that drift down behind it. Transform/opacity only, rAF throttled.
- * Under prefers-reduced-motion it parks quietly by the wordmark.
+ * that drift down behind it. Transform/opacity only, rAF throttled, paused
+ * while the tab is hidden. On small screens the path simplifies to a high
+ * band above the content and trails are reduced.
+ * Under prefers-reduced-motion it parks quietly by the wordmark, wings still.
  */
 ---
 
 <div id="fae-bee" aria-hidden="true">
-  <div class="bee-inner">
-    <div class="bee-flutter">
+  <div class="bee-roll">
+    <div class="bee-inner">
       <img
-        src="/logo/bee-magical-bee.png"
+        class="bee-wings"
+        src="/logo/bee-magical-bee-wings.png"
+        alt=""
+        width="306"
+        height="277"
+        draggable="false"
+      />
+      <img
+        class="bee-body"
+        src="/logo/bee-magical-bee-body.png"
         alt=""
         width="306"
         height="277"
@@ -38,19 +62,33 @@
     left: 0;
     z-index: 70;
     width: var(--bee-w, 88px);
+    aspect-ratio: 306 / 277;
     pointer-events: none;
     will-change: transform;
     /* start parked off-screen until the island takes over */
     transform: translate3d(-200px, -200px, 0);
   }
-  #fae-bee img {
+  .bee-roll { position: absolute; inset: 0; will-change: transform; }
+  .bee-inner { position: absolute; inset: 0; will-change: transform; }
+
+  .bee-wings,
+  .bee-body {
+    position: absolute;
+    inset: 0;
     width: 100%;
-    height: auto;
-    filter: drop-shadow(0 0 14px rgba(74, 234, 255, 0.5));
+    height: 100%;
   }
-  .bee-inner { will-change: transform; }
-  .bee-flutter { will-change: transform; transform-origin: 50% 40%; }
-  .bee-flutter.flap { animation: wing 0.14s ease-in-out infinite; }
+  .bee-body { filter: drop-shadow(0 0 14px rgba(74, 234, 255, 0.5)); }
+  .bee-wings {
+    /* wing root: where the wings meet the back of the body */
+    transform-origin: 55% 62%;
+    will-change: transform;
+    animation: beeflap var(--flap, 0.11s) ease-in-out infinite;
+    transition: filter 0.25s ease;
+  }
+  /* a touch of motion blur on the wings during fast flight */
+  #fae-bee.fast .bee-wings { filter: blur(1.5px); }
+  #fae-bee.still .bee-wings { animation: none; }
 
   .bee-trail { position: fixed; inset: 0; z-index: 69; pointer-events: none; overflow: hidden; }
   :global(.bee-spark) { position: absolute; border-radius: 50%; will-change: transform, opacity; }
@@ -64,49 +102,50 @@
     will-change: transform, opacity;
   }
 
-  @media (max-width: 640px) { #fae-bee { --bee-w: 64px; } }
+  @media (max-width: 640px) { #fae-bee { --bee-w: 60px; } }
 
-  /* reduced-motion park: sit quietly near the hero, no flutter */
+  /* reduced-motion park: sit quietly near the hero, wings still */
   @media (prefers-reduced-motion: reduce) {
-    .bee-flutter.flap { animation: none; }
+    .bee-wings { animation: none !important; }
   }
 </style>
 
 <script>
   const bee = document.getElementById('fae-bee') as HTMLElement | null;
+  const roll = bee?.querySelector('.bee-roll') as HTMLElement | null;
   const inner = bee?.querySelector('.bee-inner') as HTMLElement | null;
-  const flutter = bee?.querySelector('.bee-flutter') as HTMLElement | null;
   const trail = document.querySelector('.bee-trail') as HTMLElement | null;
   const loader = document.getElementById('loader');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const smallScreen = window.matchMedia('(max-width: 640px)');
 
   function finishLoader() {
     loader?.classList.add('done');
     document.body.classList.add('loaded');
   }
 
-  if (!bee || !inner || !flutter) {
+  if (!bee || !roll || !inner) {
     finishLoader();
   } else if (reduce) {
-    // Park quietly near the wordmark, reveal everything, no animation.
+    // Park quietly near the wordmark, reveal everything, wings still, no trails.
+    bee.classList.add('still');
     const px = window.innerWidth * 0.6;
     const py = window.innerHeight * 0.34;
     bee.style.transform = `translate3d(${px}px, ${py}px, 0)`;
     finishLoader();
   } else {
-    flutter.classList.add('flap');
-
     const beeW = () => bee.offsetWidth || 88;
     const halfW = () => beeW() / 2;
-    const halfH = () => (beeW() * 0.9) / 2;
+    const halfH = () => (beeW() * (277 / 306)) / 2;
 
     // current + smoothed state
     let curX = -160, curY = window.innerHeight * 0.5;
-    let prevX = curX;
+    let prevX = curX, prevY = curY;
     let bank = 0;
+    let vxSmooth = 0;
 
     // intro arc
-    const introStart = performance.now();
+    let introStart = performance.now();
     const introDur = 2200;
     const startX = -160;
     const startY = window.innerHeight * 0.78;
@@ -116,8 +155,10 @@
     let ctrlX = window.innerWidth * 0.32;
     let ctrlY = window.innerHeight * 0.12;
 
-    let mode: 'intro' | 'wander' | 'guide' = 'intro';
+    let mode: 'intro' | 'idle' | 'wander' | 'guide' = 'intro';
     let burstFired = false;
+    let idleStart = 0;
+    let idleScrollY = 0;
 
     function recomputeLanding() {
       landX = window.innerWidth * 0.6;
@@ -127,10 +168,54 @@
     }
     window.addEventListener('resize', recomputeLanding);
 
-    function easeInOut(t: number) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+    function easeOutCubic(t: number) { return 1 - Math.pow(1 - t, 3); }
     function bezier(p: number, a: number, c: number, b: number) {
       const m = 1 - p;
       return m * m * a + 2 * m * p * c + p * p * b;
+    }
+
+    // ---------- wing flap states ----------
+    // beat duration: ~90-130ms in flight, calm when idling or guiding
+    let flapState = '';
+    function setFlap(state: 'fast' | 'cruise' | 'calm') {
+      if (state === flapState) return;
+      flapState = state;
+      const dur = state === 'fast' ? '0.09s' : state === 'cruise' ? '0.12s' : '0.2s';
+      bee!.style.setProperty('--flap', dur);
+      bee!.classList.toggle('fast', state === 'fast');
+    }
+    setFlap('cruise');
+
+    // ---------- barrel rolls ----------
+    let rolling = false;
+    let lastRoll = performance.now();
+    let nextTimedRoll = performance.now() + 12000 + Math.random() * 8000;
+
+    function barrelRoll(now: number) {
+      if (rolling || now - lastRoll < 6000) return;
+      rolling = true;
+      lastRoll = now;
+      nextTimedRoll = now + 12000 + Math.random() * 8000;
+      const dir = vxSmooth >= 0 ? 1 : -1;
+      roll!.animate(
+        [
+          { transform: 'perspective(600px) rotateY(0deg) rotateZ(0deg)' },
+          { transform: `perspective(600px) rotateY(${dir * 200}deg) rotateZ(${dir * 10}deg)`, offset: 0.55 },
+          { transform: `perspective(600px) rotateY(${dir * 360}deg) rotateZ(0deg)` },
+        ],
+        { duration: 700, easing: 'cubic-bezier(0.45, 0.1, 0.3, 1)' }
+      ).onfinish = () => { rolling = false; };
+    }
+
+    // section boundaries: roll when the bee crosses into a new section
+    const sectionEls = Array.from(document.querySelectorAll('main .section')) as HTMLElement[];
+    let lastSection = -1;
+    function sectionAt(scrollMid: number) {
+      let idx = -1;
+      for (let i = 0; i < sectionEls.length; i++) {
+        if (sectionEls[i].offsetTop <= scrollMid) idx = i;
+      }
+      return idx;
     }
 
     // ---------- constellation guide wiring ----------
@@ -138,6 +223,8 @@
     let guidedThisVisit = false;
     let guideNodes: HTMLElement[] = [];
     let guideIdx = 0;
+    // lift-off impulse after finishing the trace, decays each frame
+    let liftY = 0;
 
     const section = document.getElementById('gallery');
     if (section) {
@@ -154,17 +241,23 @@
     }
 
     function refreshGuideNodes() {
-      guideNodes = Array.from(document.querySelectorAll('.constellation .c-node')) as HTMLElement[];
+      guideNodes = (Array.from(document.querySelectorAll('.constellation .c-node')) as HTMLElement[])
+        .filter((n) => n.offsetParent !== null);
     }
 
     // ---------- trail emission ----------
     let lastEmit = 0;
+    let liveSparks = 0;
+    const SPARK_CAP = 60;
     const sparkCols = ['#4AEAFF', '#E9C46A'];
     function emit(now: number, cx: number, cy: number) {
-      if (now - lastEmit < 55 || !trail) return;
+      if (!trail || document.hidden) return;
+      const small = smallScreen.matches;
+      const interval = small ? 110 : 55;
+      if (now - lastEmit < interval || liveSparks >= SPARK_CAP) return;
       lastEmit = now;
       // small cyan/gold sparkles
-      const n = 1 + ((Math.random() * 2) | 0);
+      const n = small ? 1 : 1 + ((Math.random() * 2) | 0);
       for (let i = 0; i < n; i++) {
         const s = document.createElement('div');
         s.className = 'bee-spark';
@@ -177,16 +270,17 @@
         s.style.left = cx + (Math.random() * 16 - 8) + 'px';
         s.style.top = cy + (Math.random() * 16 - 8) + 'px';
         trail.appendChild(s);
+        liveSparks++;
         s.animate(
           [
             { transform: 'translateY(0) scale(1)', opacity: 0.95 },
             { transform: `translateY(${14 + Math.random() * 18}px) scale(0)`, opacity: 0 },
           ],
           { duration: 700 + Math.random() * 400, easing: 'ease-out' }
-        ).onfinish = () => s.remove();
+        ).onfinish = () => { s.remove(); liveSparks--; };
       }
       // occasional slower, larger fae-dust mote
-      if (Math.random() > 0.7) {
+      if (Math.random() > (small ? 0.85 : 0.7)) {
         const m = document.createElement('div');
         m.className = 'bee-spark';
         const col = Math.random() > 0.5 ? '#F0EAD6' : '#9B30FF';
@@ -198,13 +292,14 @@
         m.style.left = cx + (Math.random() * 14 - 7) + 'px';
         m.style.top = cy + (Math.random() * 14 - 7) + 'px';
         trail.appendChild(m);
+        liveSparks++;
         m.animate(
           [
             { transform: 'translateY(0) scale(1)', opacity: 0.7 },
             { transform: `translateY(${30 + Math.random() * 26}px) scale(0.4)`, opacity: 0 },
           ],
           { duration: 1500 + Math.random() * 700, easing: 'ease-out' }
-        ).onfinish = () => m.remove();
+        ).onfinish = () => { m.remove(); liveSparks--; };
       }
     }
 
@@ -224,26 +319,58 @@
       ).onfinish = () => b.remove();
     }
 
+    function land() {
+      // decelerate is built into the eased arc; squash and settle here
+      roll!.animate(
+        [
+          { transform: 'scaleY(1)' },
+          { transform: 'scaleY(0.9) scaleX(1.05)', offset: 0.4 },
+          { transform: 'scaleY(1)' },
+        ],
+        { duration: 420, easing: 'ease-out' }
+      );
+      fireBurst(curX + halfW(), curY + halfH());
+      setTimeout(finishLoader, 180);
+      setFlap('calm');
+      mode = 'idle';
+      idleStart = performance.now();
+      idleScrollY = window.scrollY;
+    }
+
     // ---------- main loop ----------
+    let rafId = 0;
     function frame(now: number) {
+      rafId = requestAnimationFrame(frame);
       let targetX: number, targetY: number;
 
       if (mode === 'intro') {
         const p = Math.min(1, (now - introStart) / introDur);
-        const e = easeInOut(p);
+        const e = easeOutCubic(p);
         curX = bezier(e, startX, ctrlX, landX);
         curY = bezier(e, startY, ctrlY, landY);
-        if (p >= 1) {
-          if (!burstFired) {
-            burstFired = true;
-            fireBurst(curX + halfW(), curY + halfH());
-            setTimeout(finishLoader, 180);
-          }
+        if (p > 0.75) setFlap('calm'); // ease off the wings on approach
+        else setFlap('fast');
+        if (p >= 1 && !burstFired) {
+          burstFired = true;
+          land();
+        }
+      } else if (mode === 'idle') {
+        // hover by the wordmark: slow flap, gentle drift, until the page moves
+        curX += (landX - curX) * 0.04 + Math.sin(now / 900) * 0.18;
+        curY += (landY - curY) * 0.04 + Math.sin(now / 1300) * 0.22;
+        if (Math.abs(window.scrollY - idleScrollY) > 30 && now - idleStart > 600) {
           mode = 'wander';
+          setFlap('cruise');
         }
       } else {
-        if (galleryInView && !guidedThisVisit) {
-          if (mode !== 'guide') { mode = 'guide'; refreshGuideNodes(); guideIdx = 0; }
+        if (galleryInView && !guidedThisVisit && !smallScreen.matches) {
+          if (mode !== 'guide') {
+            mode = 'guide';
+            refreshGuideNodes();
+            guideIdx = 0;
+            setFlap('calm');
+            barrelRoll(now); // playful flip as it dives in to guide
+          }
         }
 
         if (mode === 'guide' && guideNodes.length) {
@@ -254,39 +381,95 @@
           const dx = targetX - curX, dy = targetY - curY;
           if (Math.hypot(dx, dy) < 26) {
             guideIdx++;
-            if (guideIdx >= guideNodes.length) { guidedThisVisit = true; mode = 'wander'; }
+            if (guideIdx >= guideNodes.length) {
+              // lift off: upward impulse, back to cruising
+              guidedThisVisit = true;
+              mode = 'wander';
+              liftY = -90;
+              setFlap('fast');
+            }
           }
-          curX += dx * 0.06;
-          curY += dy * 0.06;
+          curX += dx * 0.05;
+          curY += dy * 0.05;
         } else {
-          mode = galleryInView && !guidedThisVisit ? 'guide' : 'wander';
+          mode = galleryInView && !guidedThisVisit && !smallScreen.matches ? 'guide' : 'wander';
           // wander: vertical tracks scroll, horizontal sine drift
           const doc = document.documentElement;
           const max = (doc.scrollHeight - window.innerHeight) || 1;
           const frac = Math.min(1, Math.max(0, window.scrollY / max));
-          const amp = Math.min(window.innerWidth * 0.28, 260);
-          targetY = window.innerHeight * (0.12 + frac * 0.7) - halfH();
-          targetX =
-            window.innerWidth * 0.5 - halfW() +
-            Math.sin(now / 1400 + frac * 6.0) * amp +
-            Math.sin(now / 3700) * (amp * 0.25);
+          if (smallScreen.matches) {
+            // small screens: simplified path in a high band above the content
+            const amp = window.innerWidth * 0.34;
+            targetY = window.innerHeight * 0.09 + Math.sin(now / 1700) * 12 - halfH();
+            targetX = window.innerWidth * 0.5 - halfW() + Math.sin(now / 2100 + frac * 4.0) * amp;
+          } else {
+            const amp = Math.min(window.innerWidth * 0.28, 260);
+            targetY = window.innerHeight * (0.12 + frac * 0.7) - halfH();
+            targetX =
+              window.innerWidth * 0.5 - halfW() +
+              Math.sin(now / 1400 + frac * 6.0) * amp +
+              Math.sin(now / 3700) * (amp * 0.25);
+          }
+          liftY *= 0.94;
           curX += (targetX - curX) * 0.045;
-          curY += (targetY - curY) * 0.06;
+          curY += (targetY + liftY - curY) * 0.06;
+
+          // timed barrel roll while cruising
+          if (now > nextTimedRoll) barrelRoll(now);
         }
       }
 
-      // banking from horizontal velocity
+      // velocity: banking, flap speed, sharp-turn rolls
       const vx = curX - prevX;
+      const vy = curY - prevY;
       prevX = curX;
+      prevY = curY;
+      const speed = Math.hypot(vx, vy);
+      const prevVxSmooth = vxSmooth;
+      vxSmooth += (vx - vxSmooth) * 0.08;
+
+      if (mode === 'wander') {
+        setFlap(speed > 5 ? 'fast' : 'cruise');
+        // sharp direction change: flip the other way with a roll
+        if (
+          Math.sign(vxSmooth) !== Math.sign(prevVxSmooth) &&
+          Math.abs(prevVxSmooth) > 2.2 &&
+          Math.random() > 0.5
+        ) {
+          barrelRoll(now);
+        }
+        // crossing a section boundary
+        const sec = sectionAt(window.scrollY + window.innerHeight * 0.5);
+        if (sec !== lastSection) {
+          if (lastSection !== -1 && Math.random() > 0.4) barrelRoll(now);
+          lastSection = sec;
+        }
+      }
+
       const targetBank = Math.max(-18, Math.min(18, vx * 0.9));
       bank += (targetBank - bank) * 0.1;
+      const bob = Math.sin(now / 460) * 2.2;
 
       bee!.style.transform = `translate3d(${curX.toFixed(1)}px, ${curY.toFixed(1)}px, 0)`;
-      inner!.style.transform = `rotate(${(6 + bank).toFixed(2)}deg)`;
+      inner!.style.transform = `rotate(${(6 + bank).toFixed(2)}deg) translateY(${bob.toFixed(1)}px)`;
 
       emit(now, curX + halfW(), curY + halfH());
-      requestAnimationFrame(frame);
     }
-    requestAnimationFrame(frame);
+    rafId = requestAnimationFrame(frame);
+
+    // pause the loop entirely while the tab is hidden
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        cancelAnimationFrame(rafId);
+      } else {
+        // re-anchor timers so the intro/rolls don't all fire at once
+        const now = performance.now();
+        if (mode === 'intro') introStart = now - introDur; // just land
+        nextTimedRoll = Math.max(nextTimedRoll, now + 4000);
+        prevX = curX;
+        prevY = curY;
+        rafId = requestAnimationFrame(frame);
+      }
+    });
   }
 </script>

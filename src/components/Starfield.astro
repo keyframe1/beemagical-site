@@ -1,15 +1,19 @@
 ---
 /**
  * Starfield.astro - the ambient sky island.
- * Static HTML: the gradient sky and three drifting nebulae (paint instantly).
+ * Static HTML: the gradient sky, a faint diagonal Milky Way band, and three
+ * drifting nebulae that slowly breathe their hue between cyan, violet, and
+ * magenta (stacked tint layers cross-fading, opacity only).
  * Client island: three parallax star layers that react to mouse + scroll,
- * periodic shooting stars, the cursor sparkle trail, and a page-wide
- * slow-falling fae-dust layer of gold, cyan, and soft-white motes.
- * All decorative, pointer-events: none. Honors prefers-reduced-motion.
+ * periodic shooting stars, a rare slow "wish" comet, the cursor sparkle
+ * trail, and a page-wide slow-falling fae-dust layer.
+ * All decorative, pointer-events: none. Honors prefers-reduced-motion and
+ * pauses every loop while the tab is hidden (html.tab-hidden + timers).
  */
 ---
 
 <div class="sky" aria-hidden="true">
+  <div class="milky-way"></div>
   <div class="neb a"></div>
   <div class="neb b"></div>
   <div class="neb c"></div>
@@ -37,10 +41,51 @@
       radial-gradient(ellipse 60% 55% at 82% 72%, rgba(155, 48, 255, 0.16), transparent 55%),
       radial-gradient(circle at 50% 40%, var(--sky-1) 0%, var(--sky-2) 45%, var(--sky-3) 100%);
   }
+
+  /* faint diagonal Milky Way band; the island seeds it with dense tiny stars */
+  .milky-way {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 170vmax;
+    height: 30vmax;
+    transform: translate(-50%, -50%) rotate(-24deg);
+    background:
+      linear-gradient(to bottom,
+        transparent 0%,
+        rgba(240, 234, 214, 0.025) 28%,
+        rgba(74, 234, 255, 0.035) 50%,
+        rgba(240, 234, 214, 0.025) 72%,
+        transparent 100%);
+    opacity: 0.8;
+  }
+  :global(.mw-star) {
+    position: absolute;
+    border-radius: 50%;
+    background: #fff;
+  }
+
   .neb { position: absolute; border-radius: 50%; filter: blur(75px); opacity: 0.42; mix-blend-mode: screen; }
   .neb.a { width: 520px; height: 520px; background: radial-gradient(circle, #2b6bd6, transparent 70%); top: -120px; left: -100px; animation: f1 26s ease-in-out infinite; }
   .neb.b { width: 480px; height: 480px; background: radial-gradient(circle, #9b30ff, transparent 70%); bottom: -150px; right: -120px; animation: f2 31s ease-in-out infinite; }
   .neb.c { width: 420px; height: 420px; background: radial-gradient(circle, #d946ef, transparent 72%); top: 44%; left: 55%; animation: f3 35s ease-in-out infinite; }
+
+  /* hue breathing: each nebula carries two extra tints that fade in and out
+     on offset clocks, so the cloud drifts cyan -> violet -> magenta */
+  .neb::before,
+  .neb::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    opacity: 0;
+  }
+  .neb.a::before { background: radial-gradient(circle, #4AEAFF, transparent 70%); animation: nebbreathe 23s ease-in-out infinite; }
+  .neb.a::after  { background: radial-gradient(circle, #9B30FF, transparent 70%); animation: nebbreathe 23s ease-in-out -11.5s infinite; }
+  .neb.b::before { background: radial-gradient(circle, #D946EF, transparent 70%); animation: nebbreathe 29s ease-in-out infinite; }
+  .neb.b::after  { background: radial-gradient(circle, #4AEAFF, transparent 70%); animation: nebbreathe 29s ease-in-out -14.5s infinite; }
+  .neb.c::before { background: radial-gradient(circle, #9B30FF, transparent 72%); animation: nebbreathe 26s ease-in-out infinite; }
+  .neb.c::after  { background: radial-gradient(circle, #4AEAFF, transparent 72%); animation: nebbreathe 26s ease-in-out -13s infinite; }
 
   #stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
   #stars .layer { position: absolute; inset: -10%; will-change: transform; }
@@ -62,6 +107,32 @@
     filter: drop-shadow(0 0 6px rgba(74, 234, 255, 0.7));
     will-change: transform, opacity;
   }
+  /* the rare wish comet: bigger, slower, with a soft long tail */
+  :global(.comet) {
+    position: absolute;
+    height: 3px;
+    width: 300px;
+    background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(155, 48, 255, 0.25) 35%,
+      rgba(74, 234, 255, 0.75) 78%,
+      #fff 96%);
+    border-radius: 3px;
+    transform-origin: left center;
+    filter: drop-shadow(0 0 10px rgba(74, 234, 255, 0.8)) drop-shadow(0 0 26px rgba(155, 48, 255, 0.45));
+    will-change: transform, opacity;
+  }
+  :global(.comet::after) {
+    content: '';
+    position: absolute;
+    right: -4px;
+    top: 50%;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    transform: translateY(-50%);
+    background: radial-gradient(circle, #fff 0%, rgba(74, 234, 255, 0.9) 45%, transparent 75%);
+  }
   :global(.cursor-spark) {
     position: absolute;
     width: 6px;
@@ -73,14 +144,20 @@
 
 <script>
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const small = window.innerWidth < 640;
+
+  // ---------- tab visibility: pause every decorative CSS loop ----------
+  document.addEventListener('visibilitychange', () => {
+    document.documentElement.classList.toggle('tab-hidden', document.hidden);
+  });
 
   type LayerDef = { el: HTMLElement; count: number; sizeMin: number; sizeMax: number; mouse: number; scroll: number };
 
   function makeStars() {
     const layers: LayerDef[] = [
-      { el: document.querySelector('.l1') as HTMLElement, count: 38, sizeMin: 0.6, sizeMax: 1.4, mouse: 6, scroll: 0.012 },
-      { el: document.querySelector('.l2') as HTMLElement, count: 30, sizeMin: 1.0, sizeMax: 2.0, mouse: 14, scroll: 0.035 },
-      { el: document.querySelector('.l3') as HTMLElement, count: 20, sizeMin: 1.6, sizeMax: 3.0, mouse: 26, scroll: 0.07 },
+      { el: document.querySelector('.l1') as HTMLElement, count: small ? 26 : 38, sizeMin: 0.6, sizeMax: 1.4, mouse: 6, scroll: 0.012 },
+      { el: document.querySelector('.l2') as HTMLElement, count: small ? 20 : 30, sizeMin: 1.0, sizeMax: 2.0, mouse: 14, scroll: 0.035 },
+      { el: document.querySelector('.l3') as HTMLElement, count: small ? 13 : 20, sizeMin: 1.6, sizeMax: 3.0, mouse: 26, scroll: 0.07 },
     ];
     for (const layer of layers) {
       if (!layer.el) continue;
@@ -110,13 +187,37 @@
 
   const layers = makeStars();
 
+  // ---------- Milky Way: dense static dust of tiny stars, very low opacity,
+  // concentrated toward the middle of the band ----------
+  function makeMilkyWay() {
+    const host = document.querySelector('.milky-way');
+    if (!host) return;
+    const COUNT = small ? 70 : 140;
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < COUNT; i++) {
+      const d = document.createElement('div');
+      d.className = 'mw-star';
+      const r = 0.5 + Math.random() * 1.1;
+      // bias toward the band's center line
+      const spread = (Math.random() + Math.random()) / 2; // ~triangular
+      d.style.width = r + 'px';
+      d.style.height = r + 'px';
+      d.style.left = Math.random() * 100 + '%';
+      d.style.top = (spread * 100).toFixed(1) + '%';
+      d.style.opacity = (0.05 + Math.random() * 0.22).toFixed(2);
+      frag.appendChild(d);
+    }
+    host.appendChild(frag);
+  }
+  makeMilkyWay();
+
   // ---------- fae dust: page-wide slow-falling motes ----------
   function makeDust() {
     if (reduce) return;
     const host = document.querySelector('.fae-dust');
     if (!host) return;
     const colors = ['#E9C46A', '#4AEAFF', '#F0EAD6'];
-    const COUNT = window.innerWidth < 640 ? 34 : 60;
+    const COUNT = small ? 26 : 60;
     const frag = document.createDocumentFragment();
     for (let i = 0; i < COUNT; i++) {
       const m = document.createElement('div');
@@ -167,7 +268,7 @@
   // ---------- shooting stars ----------
   function shoot() {
     const host = document.querySelector('.shooting-layer');
-    if (!host) return;
+    if (!host || document.hidden) return;
     const s = document.createElement('div');
     s.className = 'shoot';
     const startX = 10 + Math.random() * 60;
@@ -178,7 +279,6 @@
     s.style.transform = `rotate(${angle}deg)`;
     host.appendChild(s);
     const dist = 40 + Math.random() * 30;
-    const rad = (angle * Math.PI) / 180;
     s.animate(
       [
         { transform: `rotate(${angle}deg) translateX(0)`, opacity: 0 },
@@ -187,7 +287,6 @@
       ],
       { duration: 700 + Math.random() * 500, easing: 'ease-out' }
     ).onfinish = () => s.remove();
-    void rad;
   }
   function scheduleShoot() {
     if (reduce) return;
@@ -195,6 +294,36 @@
     setTimeout(scheduleShoot, 4500 + Math.random() * 6000);
   }
   setTimeout(scheduleShoot, 2500);
+
+  // ---------- the wish comet: rare, slow, with a long soft tail ----------
+  function wish() {
+    const host = document.querySelector('.shooting-layer');
+    if (!host || document.hidden) return;
+    const c = document.createElement('div');
+    c.className = 'comet';
+    const fromLeft = Math.random() > 0.5;
+    const startY = 5 + Math.random() * 30;
+    const angle = (8 + Math.random() * 10) * (fromLeft ? 1 : -1) + (fromLeft ? 0 : 180);
+    c.style.left = (fromLeft ? -20 : 110) + 'vw';
+    c.style.top = startY + 'vh';
+    if (small) c.style.width = '180px';
+    host.appendChild(c);
+    c.animate(
+      [
+        { transform: `rotate(${angle}deg) translateX(0)`, opacity: 0 },
+        { opacity: 0.95, offset: 0.12 },
+        { opacity: 0.95, offset: 0.8 },
+        { transform: `rotate(${angle}deg) translateX(135vw)`, opacity: 0 },
+      ],
+      { duration: 4800 + Math.random() * 1800, easing: 'cubic-bezier(0.3, 0, 0.6, 1)' }
+    ).onfinish = () => c.remove();
+  }
+  function scheduleWish() {
+    if (reduce) return;
+    wish();
+    setTimeout(scheduleWish, 30000 + Math.random() * 30000);
+  }
+  setTimeout(scheduleWish, 14000 + Math.random() * 12000);
 
   // ---------- cursor sparkle trail ----------
   if (!reduce) {

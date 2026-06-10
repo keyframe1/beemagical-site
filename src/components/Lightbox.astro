@@ -1,8 +1,10 @@
 ---
 /**
  * Lightbox.astro - full image view with prev/next and keyboard support.
- * Renders every work as a hidden astro:assets <Image> (width, height, alt),
- * then shows the active one. Opened by the 'lightbox:open' event the
+ * Renders every work as a stacked astro:assets <Image> (width, height, alt)
+ * and crossfades between them on prev/next. Opens with a scale-and-fade
+ * from the clicked node (the opener passes its origin point), over a faint
+ * constellation backdrop. Opened by the 'lightbox:open' event the
  * Constellation and Featured dispatch. Maps over the collection, so new art
  * appears here automatically. Esc closes; arrow keys move.
  */
@@ -19,16 +21,28 @@ function priceLine(d: (typeof works)[number]['data']): string {
   if (d.prints && d.printsFrom) main += ` . Prints from $${d.printsFrom}`;
   return main;
 }
+
+// a faint constellation behind the viewer, echoing the gallery chart
+const bgStars = works.map((w) => ({ x: w.data.x, y: w.data.y }));
 ---
 
 <div id="lightbox" class="lb" role="dialog" aria-modal="true" aria-label="Artwork viewer" hidden>
+  <svg class="lb-sky" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    {bgStars.map((s, i) => (
+      <>
+        {i > 0 && <line x1={bgStars[i - 1].x} y1={bgStars[i - 1].y} x2={s.x} y2={s.y} />}
+        <circle cx={s.x} cy={s.y} r="0.45" />
+      </>
+    ))}
+  </svg>
+
   <button class="lb-close" type="button" aria-label="Close viewer">&times;</button>
   <button class="lb-nav lb-prev" type="button" aria-label="Previous work">&#8249;</button>
   <button class="lb-nav lb-next" type="button" aria-label="Next work">&#8250;</button>
 
   <div class="lb-stage">
     {works.map((w, i) => (
-      <figure class="lb-figure" data-index={i} hidden>
+      <figure class="lb-figure" data-index={i}>
         <div class="lb-imgwrap">
           <Image
             src={w.data.image}
@@ -65,15 +79,40 @@ function priceLine(d: (typeof works)[number]['data']): string {
   }
   .lb[hidden] { display: none; }
 
-  .lb-stage { width: min(1000px, 100%); max-height: 90vh; }
-  .lb-figure { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; }
-  .lb-figure[hidden] { display: none; }
+  .lb-sky {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.16;
+    pointer-events: none;
+  }
+  .lb-sky line { stroke: var(--cyan); stroke-width: 0.5px; vector-effect: non-scaling-stroke; }
+  .lb-sky circle { fill: var(--moon); }
+
+  .lb-stage {
+    width: min(1000px, 100%);
+    max-height: 90vh;
+    display: grid;
+    will-change: transform, opacity;
+  }
+  .lb-figure {
+    grid-area: 1 / 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.35s ease, visibility 0.35s;
+  }
+  .lb-figure.active { opacity: 1; visibility: visible; }
 
   .lb-imgwrap {
-    border-radius: 14px;
+    border-radius: var(--radius-md);
     overflow: hidden;
     border: 1px solid rgba(74, 234, 255, 0.3);
-    box-shadow: 0 0 38px rgba(74, 234, 255, 0.18), 0 18px 50px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 38px rgba(74, 234, 255, 0.18), var(--shadow-deep);
     background: #05071a;
   }
   .lb-img { width: 100%; height: auto; max-height: 80vh; object-fit: contain; display: block; }
@@ -87,11 +126,12 @@ function priceLine(d: (typeof works)[number]['data']): string {
 
   .lb-close, .lb-nav {
     position: absolute;
+    z-index: 2;
     background: rgba(74, 234, 255, 0.07);
     border: 1px solid rgba(74, 234, 255, 0.35);
     color: var(--moon);
     cursor: pointer;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     transition: background 0.25s ease, box-shadow 0.25s ease;
   }
   .lb-close:hover, .lb-nav:hover { background: rgba(74, 234, 255, 0.2); box-shadow: 0 0 20px rgba(74, 234, 255, 0.35); }
@@ -102,6 +142,7 @@ function priceLine(d: (typeof works)[number]['data']): string {
 
   @media (max-width: 760px) {
     .lb-figure { grid-template-columns: 1fr; gap: 16px; max-height: 86vh; overflow-y: auto; }
+    .lb-figure.active { overflow-y: auto; }
     .lb-img { max-height: 52vh; }
     .lb-nav { top: auto; bottom: 18px; transform: none; }
   }
@@ -110,23 +151,41 @@ function priceLine(d: (typeof works)[number]['data']): string {
 <script>
   const lb = document.getElementById('lightbox');
   if (lb) {
+    const stage = lb.querySelector('.lb-stage') as HTMLElement;
     const figures = Array.from(lb.querySelectorAll('.lb-figure')) as HTMLElement[];
     const closeBtn = lb.querySelector('.lb-close') as HTMLButtonElement;
     const prevBtn = lb.querySelector('.lb-prev') as HTMLButtonElement;
     const nextBtn = lb.querySelector('.lb-next') as HTMLButtonElement;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let current = 0;
     let lastFocus: HTMLElement | null = null;
 
     function show(i: number) {
       current = (i + figures.length) % figures.length;
-      figures.forEach((f, idx) => (f.hidden = idx !== current));
+      // crossfade: the stacked figures share a grid cell, CSS transitions
+      figures.forEach((f, idx) => f.classList.toggle('active', idx === current));
     }
-    function open(i: number) {
+    function open(i: number, originX?: number, originY?: number) {
       lastFocus = document.activeElement as HTMLElement;
       show(i);
       lb!.hidden = false;
       document.body.style.overflow = 'hidden';
       closeBtn.focus();
+      if (!reduce) {
+        // scale-and-fade out from the clicked node
+        lb!.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250, easing: 'ease-out' });
+        const r = stage.getBoundingClientRect();
+        const ox = originX !== undefined ? originX - r.left : r.width / 2;
+        const oy = originY !== undefined ? originY - r.top : r.height / 2;
+        stage.style.transformOrigin = `${ox.toFixed(0)}px ${oy.toFixed(0)}px`;
+        stage.animate(
+          [
+            { opacity: 0, transform: 'scale(0.6)' },
+            { opacity: 1, transform: 'scale(1)' },
+          ],
+          { duration: 380, easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)' }
+        );
+      }
     }
     function close() {
       lb!.hidden = true;
@@ -136,7 +195,11 @@ function priceLine(d: (typeof works)[number]['data']): string {
 
     window.addEventListener('lightbox:open', (e) => {
       const detail = (e as CustomEvent).detail;
-      open(detail && typeof detail.index === 'number' ? detail.index : 0);
+      open(
+        detail && typeof detail.index === 'number' ? detail.index : 0,
+        detail?.originX,
+        detail?.originY
+      );
     });
 
     closeBtn.addEventListener('click', close);
@@ -145,7 +208,7 @@ function priceLine(d: (typeof works)[number]['data']): string {
 
     // click on the backdrop (not the figure) closes
     lb.addEventListener('click', (e) => {
-      if (e.target === lb) close();
+      if (e.target === lb || e.target === stage) close();
     });
     // the Inquire button jumps to contact and closes the viewer
     lb.addEventListener('click', (e) => {

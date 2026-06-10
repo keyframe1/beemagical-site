@@ -1,8 +1,9 @@
 ---
 /**
  * Featured.astro - the headline work. Pulls the featured piece from the
- * collection and renders it large through astro:assets. "Acquire" points to
- * the contact section. Clicking the image opens it in the Lightbox.
+ * collection and renders it large inside a slow prismatic rim glow in the
+ * brand colors. "Acquire" points to the contact section. Clicking the image
+ * opens it in the Lightbox.
  */
 import { Image } from 'astro:assets';
 import { getArt, FEATURED_SLUG } from '../lib/art';
@@ -20,15 +21,17 @@ const d = work.data;
   </div>
 
   <div class="feat reveal">
-    <button class="feat-img" type="button" data-index={index} aria-label={`Open ${d.title} in the viewer`}>
-      <Image
-        src={d.image}
-        alt={`${d.title}. ${d.note}`}
-        width={d.image.width}
-        height={d.image.height}
-        loading="lazy"
-      />
-    </button>
+    <div class="feat-frame">
+      <button class="feat-img" type="button" data-index={index} aria-label={`Open ${d.title} in the viewer`}>
+        <Image
+          src={d.image}
+          alt={`${d.title}. ${d.note}`}
+          width={d.image.width}
+          height={d.image.height}
+          loading="lazy"
+        />
+      </button>
+    </div>
 
     <div class="feat-body">
       <p class="feat-sub">{d.medium} . {d.dimensions} . {d.year}</p>
@@ -49,22 +52,53 @@ const d = work.data;
 <style>
   .feat {
     display: grid;
-    grid-template-columns: 1.1fr 1fr;
-    gap: 44px;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 48px;
     align-items: center;
-    margin-top: 36px;
+    margin-top: var(--space-4);
   }
+
+  /* prismatic rim: an oversized conic gradient rotates slowly behind the
+     frame, blurred and at low opacity, clipped to a soft halo */
+  .feat-frame { position: relative; }
+  .feat-frame::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 145%;
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    background: conic-gradient(
+      var(--cyan),
+      var(--purple),
+      var(--magenta),
+      var(--gold),
+      var(--cyan)
+    );
+    border-radius: 50%;
+    filter: blur(46px);
+    opacity: 0.16;
+    animation: prism 18s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+
   .feat-img {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: 100%;
     padding: 0;
     border: 1px solid rgba(74, 234, 255, 0.3);
-    border-radius: 16px;
+    border-radius: var(--radius-md);
     overflow: hidden;
     cursor: pointer;
     background: #05071a;
-    box-shadow: 0 0 34px rgba(74, 234, 255, 0.16), 0 16px 40px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--glow-cyan), var(--shadow-card);
     transition: transform 0.4s ease, box-shadow 0.4s ease;
   }
-  .feat-img:hover { transform: translateY(-4px); box-shadow: 0 0 46px rgba(217, 70, 239, 0.3), 0 22px 50px rgba(0, 0, 0, 0.6); }
+  .feat-img:hover { transform: translateY(-4px); box-shadow: var(--glow-magenta), 0 22px 50px rgba(0, 0, 0, 0.6); }
   .feat-img :global(img) { width: 100%; height: auto; display: block; }
 
   .feat-sub { font-family: var(--font-body); font-weight: 300; font-size: 13px; letter-spacing: 0.06em; color: rgba(226, 232, 244, 0.55); }
@@ -72,14 +106,31 @@ const d = work.data;
   .feat-price { font-family: var(--font-body); font-weight: 500; font-size: 16px; color: var(--cyan); margin-top: 16px; }
   .cta { margin-top: 26px; display: flex; gap: 14px; flex-wrap: wrap; }
 
+  .eyebrow {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 10px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: rgba(74, 234, 255, 0.65);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
   @media (max-width: 760px) {
     .feat { grid-template-columns: 1fr; gap: 24px; }
+    .feat-frame::before { display: none; } /* skip the heavy blur on small screens */
   }
 </style>
 
 <script>
   const fb = document.querySelector('.feat-img') as HTMLElement | null;
   fb?.addEventListener('click', () => {
-    window.dispatchEvent(new CustomEvent('lightbox:open', { detail: { index: Number(fb.dataset.index) } }));
+    const r = fb.getBoundingClientRect();
+    window.dispatchEvent(
+      new CustomEvent('lightbox:open', {
+        detail: { index: Number(fb.dataset.index), originX: r.left + r.width / 2, originY: r.top + r.height / 2 },
+      })
+    );
   });
 </script>

@@ -1,8 +1,8 @@
 ---
 /**
- * Hero.astro - the wordmark, subhead, tagline, and calls to action.
- * The bee is the persistent FaeBee island, which lands here after the loader.
- * Subhead and section accents use Macondo; everything else Tsukimi.
+ * Hero.astro - the wordmark and the two calls to action. The wordmark
+ * carries the tagline; no subhead. The bee is the persistent FaeBee island,
+ * which lands here after the loader.
  */
 ---
 
@@ -17,8 +17,6 @@
       fetchpriority="high"
     />
   </div>
-  <p class="hero-sub">a gallery charted in stars</p>
-  <p class="tagline">Bright paintings against the dark.</p>
   <div class="cta">
     <a class="btn" href="#gallery">Enter the gallery</a>
     <a class="btn ghost" href="#featured">Originals and prints</a>
@@ -36,22 +34,8 @@
     padding: 30px 24px 24px;
     position: relative;
   }
-  .logo-stage { position: relative; width: min(620px, 90vw); margin-bottom: 14px; }
+  .logo-stage { position: relative; width: min(620px, 90vw); margin-bottom: var(--space-2); }
   .wordmark { width: 100%; height: auto; display: block; filter: drop-shadow(0 0 30px rgba(217, 70, 239, 0.35)); }
 
-  .hero-sub {
-    font-family: var(--font-head);
-    font-size: clamp(22px, 3.6vw, 34px);
-    color: var(--gold);
-    margin-top: 6px;
-    text-shadow: 0 0 24px rgba(233, 196, 106, 0.3);
-  }
-  .tagline {
-    font-family: var(--font-body);
-    font-weight: 300;
-    font-size: clamp(16px, 2.2vw, 21px);
-    color: rgba(226, 232, 244, 0.72);
-    margin-top: 8px;
-  }
-  .cta { margin-top: 30px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .cta { margin-top: var(--space-4); display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
 </style>

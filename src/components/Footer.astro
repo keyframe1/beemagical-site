@@ -1,7 +1,7 @@
 ---
 /**
- * Footer.astro - wordmark, the real links, and a quiet sign-off.
- * No em dashes.
+ * Footer.astro - small bee mark and text lockup, the real links, and a
+ * quiet sign-off. No em dashes.
  */
 const INSTAGRAM = 'https://www.instagram.com/bee__magical/';
 const KOFI = 'https://ko-fi.com/bee_magical';
@@ -10,20 +10,51 @@ const year = 2026;
 
 <footer class="foot">
   <div class="div"><span class="ln"></span><span class="d"></span><span class="ln"></span></div>
-  <img class="fm" src="/logo/bee-magical-wordmark.png" alt="Bee Magical" width="1030" height="242" />
+  <div class="lockup">
+    <img class="fbee" src="/logo/bee-magical-bee.png" alt="" width="306" height="277" />
+    <span class="fname">Bee Magical</span>
+  </div>
+  <p class="foffer">Originals, Prints, Commissions.</p>
   <div class="foot-links">
     <a href={INSTAGRAM} target="_blank" rel="noopener">Instagram</a>
     <span class="sep">.</span>
     <a href={KOFI} target="_blank" rel="noopener">Ko-fi</a>
   </div>
-  <small>Bright paintings against the dark. Made in Louisiana. &copy; {year} Bee Magical.</small>
+  <small>Made in Louisiana. &copy; {year} Bee Magical.</small>
 </footer>
 
 <style>
-  .foot { text-align: center; padding: 60px 24px 90px; position: relative; z-index: 2; }
-  .fm { height: 30px; width: auto; opacity: 0.85; margin: 22px auto 0; filter: drop-shadow(0 0 12px rgba(217, 70, 239, 0.4)); }
+  .foot { text-align: center; padding: var(--space-5) var(--space-3) var(--space-6); position: relative; z-index: 2; }
+
+  .lockup {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: var(--space-3);
+  }
+  .fbee {
+    width: 34px;
+    height: auto;
+    filter: drop-shadow(0 0 10px rgba(74, 234, 255, 0.45));
+  }
+  .fname {
+    font-family: var(--font-head);
+    font-size: 24px;
+    color: var(--moon);
+    text-shadow: 0 0 18px rgba(217, 70, 239, 0.35);
+  }
+
+  .foffer {
+    margin-top: 6px;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    color: rgba(226, 232, 244, 0.6);
+  }
+
   .foot-links {
-    margin-top: 18px;
+    margin-top: var(--space-2);
     font-family: var(--font-body);
     font-weight: 500;
     letter-spacing: 0.1em;
@@ -38,6 +69,6 @@ const year = 2026;
     font-size: 11px;
     letter-spacing: 0.16em;
     color: rgba(255, 255, 255, 0.32);
-    margin-top: 16px;
+    margin-top: var(--space-2);
   }
 </style>

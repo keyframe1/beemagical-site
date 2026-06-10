@@ -1,42 +1,64 @@
 ---
 /**
- * About.astro - short, art-focused. Only location reference is Louisiana.
- * No em dashes anywhere.
+ * About.astro - one line and three stats. Only location reference is
+ * Louisiana. No em dashes anywhere.
  */
 ---
 
 <section id="about" class="section about">
   <div class="reveal">
-    <div class="eyebrow">About</div>
-    <h2 class="section-title">Bright Against the Dark</h2>
+    <h2 class="section-title">About</h2>
   </div>
   <div class="about-body reveal">
-    <p>
-      Bee Magical paints bright, fae-touched creatures and the wild things they live
-      among. Every piece is built to glow: loud color held against a deep, quiet night.
-    </p>
-    <p>
-      Originals are one of a kind. Many are also offered as prints so a little of that
-      light can hang anywhere. New work lands in its own small constellation as it is finished.
-    </p>
-    <p class="made">Made in Louisiana.</p>
+    <p class="lead">Bright, fae-touched paintings, made in Louisiana.</p>
+  </div>
+  <div class="stats">
+    <div class="stat reveal"><span class="stat-big">Originals</span><span class="stat-sub">one of a kind</span></div>
+    <div class="stat reveal"><span class="stat-big">Prints from $35</span><span class="stat-sub">open editions</span></div>
+    <div class="stat reveal"><span class="stat-big">Ships worldwide</span><span class="stat-sub">packed with care</span></div>
   </div>
 </section>
 
 <style>
-  .about-body { max-width: 720px; margin: 28px auto 0; text-align: center; }
-  .about-body p {
-    font-family: var(--font-body);
-    font-weight: 300;
-    font-size: clamp(17px, 2.1vw, 20px);
-    color: rgba(226, 232, 244, 0.82);
-    margin-bottom: 18px;
-  }
-  .about-body .made {
+  .about-body { max-width: 720px; margin: var(--space-3) auto 0; text-align: center; }
+  .about-body .lead {
     font-family: var(--font-head);
-    font-size: clamp(20px, 3vw, 28px);
+    font-size: clamp(22px, 3.2vw, 32px);
     color: var(--gold);
     text-shadow: 0 0 22px rgba(233, 196, 106, 0.3);
-    margin-top: 8px;
+    line-height: 1.4;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-2);
+    max-width: 760px;
+    margin: var(--space-4) auto 0;
+  }
+  .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 22px 14px;
+    border: 1px solid rgba(74, 234, 255, 0.18);
+    border-radius: var(--radius-md);
+    background: rgba(74, 234, 255, 0.04);
+    text-align: center;
+  }
+  .stat-big { font-family: var(--font-head); font-size: clamp(18px, 2.4vw, 24px); color: var(--moon); }
+  .stat-sub {
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(226, 232, 244, 0.5);
+  }
+
+  @media (max-width: 640px) {
+    .stats { grid-template-columns: 1fr; max-width: 420px; }
+    .stat { padding: 16px 14px; }
   }
 </style>

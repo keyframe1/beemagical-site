@@ -4,16 +4,24 @@
  * Maps over the art collection: one node per work, placed by its x/y percent,
  * joined by lines that draw in on scroll. The bee (FaeBee) reads these nodes
  * to trace the constellation as a guide. Clicking a node opens the Lightbox.
+ *
+ * Hovering a node brings the work up: a small preview floats above the star,
+ * the node and its lines brighten while the rest dims, a tiny star burst
+ * fires, and a pulse of light travels along the connected lines.
+ *
+ * On small screens the chart is replaced by a stacked card grid (no lines).
  * Adding a painting never touches this file.
  */
+import { Image } from 'astro:assets';
 import { getArt, FEATURED_SLUG } from '../lib/art';
 
 const works = await getArt();
 const indexOf = new Map(works.map((w, i) => [w.id, i]));
 
 // Build the joining lines, de-duplicated by undirected pair so a link
-// declared on either work (or both) draws exactly one line.
-type Line = { x1: number; y1: number; x2: number; y2: number };
+// declared on either work (or both) draws exactly one line. Each line
+// remembers its two endpoint slugs so hover can light its neighborhood.
+type Line = { x1: number; y1: number; x2: number; y2: number; a: string; b: string };
 const lines: Line[] = [];
 const seen = new Set<string>();
 for (const w of works) {
@@ -24,28 +32,24 @@ for (const w of works) {
     if (seen.has(key)) continue;
     seen.add(key);
     const o = works[j];
-    lines.push({ x1: w.data.x, y1: w.data.y, x2: o.data.x, y2: o.data.y });
+    lines.push({ x1: w.data.x, y1: w.data.y, x2: o.data.x, y2: o.data.y, a: w.id, b: slug });
   }
 }
 ---
 
 <section id="gallery" class="section">
   <div class="reveal">
-    <div class="eyebrow">The Gallery</div>
-    <h2 class="section-title">Charted in Stars</h2>
-    <p class="section-desc">Each work is a point of light. Follow the bee, or pick a star to step inside.</p>
+    <h2 class="section-title">The Gallery</h2>
+    <p class="section-desc">Hover to bring a work up. Click to step inside.</p>
   </div>
 
   <div class="constellation reveal" role="group" aria-label="Gallery constellation">
     <svg class="lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
       {lines.map((l) => (
-        <line
-          x1={l.x1}
-          y1={l.y1}
-          x2={l.x2}
-          y2={l.y2}
-          pathLength="1"
-        />
+        <line class="base" x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} pathLength="1" data-a={l.a} data-b={l.b} />
+      ))}
+      {lines.map((l) => (
+        <line class="pulse" x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} pathLength="1" data-a={l.a} data-b={l.b} />
       ))}
     </svg>
 
@@ -54,11 +58,28 @@ for (const w of works) {
         class:list={['c-node', { featured: w.id === FEATURED_SLUG, sold: w.data.status === 'sold' }]}
         style={`left:${w.data.x}%; top:${w.data.y}%`}
         data-index={i}
+        data-slug={w.id}
         type="button"
         aria-label={`Open ${w.data.title}, ${w.data.medium}`}
       >
+        <span class="peek">
+          <Image src={w.data.image} alt="" width={280} loading="lazy" />
+        </span>
         <span class="dot"></span>
         <span class="label">{w.data.title}</span>
+      </button>
+    ))}
+  </div>
+
+  <!-- small screens: stacked cards instead of the chart -->
+  <div class="c-cards reveal" role="group" aria-label="Gallery works">
+    {works.map((w, i) => (
+      <button class="c-card" data-index={i} type="button" aria-label={`Open ${w.data.title}, ${w.data.medium}`}>
+        <Image src={w.data.image} alt={`${w.data.title}. ${w.data.note}`} width={640} loading="lazy" />
+        <span class="cc-body">
+          <span class="cc-title">{w.data.title}</span>
+          <span class="cc-sub">{w.data.medium}</span>
+        </span>
       </button>
     ))}
   </div>
@@ -70,9 +91,9 @@ for (const w of works) {
     width: 100%;
     aspect-ratio: 3 / 2;
     max-height: 70vh;
-    margin-top: 36px;
+    margin-top: var(--space-4);
     border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 18px;
+    border-radius: var(--radius-lg);
     background: radial-gradient(ellipse 70% 60% at 50% 45%, rgba(74, 234, 255, 0.05), transparent 70%);
   }
 
@@ -83,18 +104,43 @@ for (const w of works) {
     height: 100%;
     overflow: visible;
   }
-  .lines line {
+  .lines line.base {
     stroke: rgba(74, 234, 255, 0.45);
     stroke-width: 1px;
     vector-effect: non-scaling-stroke;
     stroke-dasharray: 1;
     stroke-dashoffset: 1;
     filter: drop-shadow(0 0 3px rgba(74, 234, 255, 0.5));
+    transition: stroke 0.3s ease, opacity 0.3s ease;
   }
-  .constellation.drawn .lines line {
-    transition: stroke-dashoffset 1.4s ease;
+  .constellation.drawn .lines line.base {
+    transition: stroke-dashoffset 1.4s ease, stroke 0.3s ease, opacity 0.3s ease;
     stroke-dashoffset: 0;
   }
+  /* pulse overlay: a short dash of light that travels hovered lines */
+  .lines line.pulse {
+    stroke: #fff;
+    stroke-width: 2px;
+    vector-effect: non-scaling-stroke;
+    stroke-linecap: round;
+    stroke-dasharray: 0.12 0.88;
+    stroke-dashoffset: 1;
+    opacity: 0;
+    filter: drop-shadow(0 0 5px rgba(74, 234, 255, 0.9));
+  }
+
+  /* hover neighborhood: brighten the lit, dim the rest */
+  .constellation.focused .lines line.base { opacity: 0.3; }
+  .constellation.focused .lines line.base.lit {
+    opacity: 1;
+    stroke: rgba(74, 234, 255, 0.95);
+  }
+  .constellation.focused .lines line.pulse.lit {
+    opacity: 0.9;
+    animation: linepulse 1.3s linear infinite;
+  }
+  .constellation.focused .c-node { opacity: 0.45; }
+  .constellation.focused .c-node.lit { opacity: 1; }
 
   .c-node {
     position: absolute;
@@ -108,6 +154,7 @@ for (const w of works) {
     flex-direction: column;
     align-items: center;
     gap: 6px;
+    transition: opacity 0.3s ease;
   }
   .c-node .dot {
     width: 13px;
@@ -126,6 +173,30 @@ for (const w of works) {
     white-space: nowrap;
     transition: opacity 0.3s ease, transform 0.3s ease;
   }
+
+  /* hover preview: the work floats up above its star */
+  .c-node .peek {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    width: clamp(110px, 14vw, 160px);
+    transform: translateX(-50%) translateY(8px) scale(0.9);
+    opacity: 0;
+    pointer-events: none;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid rgba(74, 234, 255, 0.4);
+    box-shadow: var(--glow-cyan), var(--shadow-card);
+    background: #05071a;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 3;
+  }
+  .c-node .peek :global(img) { width: 100%; height: auto; display: block; }
+  .c-node.lit .peek, .c-node:focus-visible .peek {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+
   .c-node.featured .dot {
     width: 20px;
     height: 20px;
@@ -133,19 +204,70 @@ for (const w of works) {
     box-shadow: 0 0 14px var(--gold), 0 0 34px rgba(233, 196, 106, 0.7);
   }
   .c-node.sold .dot { background: var(--magenta); box-shadow: 0 0 10px var(--magenta), 0 0 22px rgba(217, 70, 239, 0.6); }
-  .c-node:hover .dot, .c-node:focus-visible .dot { transform: scale(1.4); }
-  .c-node:hover .label, .c-node:focus-visible .label { opacity: 1; transform: translateY(2px); }
+  .c-node.lit .dot, .c-node:hover .dot, .c-node:focus-visible .dot {
+    transform: scale(1.5);
+    box-shadow: 0 0 16px var(--cyan), 0 0 40px rgba(74, 234, 255, 0.9);
+  }
+  .c-node.featured.lit .dot, .c-node.featured:hover .dot {
+    box-shadow: 0 0 18px var(--gold), 0 0 46px rgba(233, 196, 106, 0.9);
+  }
+  .c-node.lit .label, .c-node:hover .label, .c-node:focus-visible .label { opacity: 1; transform: translateY(2px); }
+
+  /* hover star burst ring, appended by the island */
+  :global(.node-burst) {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1.5px solid var(--cyan);
+    box-shadow: 0 0 14px var(--cyan);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    will-change: transform, opacity;
+  }
+
+  /* ---------- stacked card grid (small screens) ---------- */
+  .c-cards { display: none; }
 
   @media (max-width: 640px) {
-    .constellation { aspect-ratio: 1 / 1; }
-    .c-node .label { font-size: 11px; }
+    .constellation { display: none; }
+    .c-cards {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-2);
+      margin-top: var(--space-3);
+    }
+    .c-card {
+      display: block;
+      padding: 0;
+      text-align: left;
+      cursor: pointer;
+      background: #05071a;
+      border: 1px solid rgba(74, 234, 255, 0.25);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+      color: var(--moon);
+    }
+    .c-card :global(img) { width: 100%; height: auto; display: block; }
+    .cc-body {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 16px 14px;
+    }
+    .cc-title { font-family: var(--font-head); font-size: 20px; color: var(--moon); }
+    .cc-sub { font-family: var(--font-body); font-weight: 300; font-size: 11px; letter-spacing: 0.06em; color: rgba(226, 232, 244, 0.55); }
   }
 </style>
 
 <script>
-  // draw the lines in when the map scrolls into view
-  const map = document.querySelector('.constellation');
+  const map = document.querySelector('.constellation') as HTMLElement | null;
   if (map) {
+    // draw the lines in when the map scrolls into view
     const io = new IntersectionObserver(
       (entries, obs) => {
         for (const e of entries) {
@@ -156,12 +278,56 @@ for (const w of works) {
     );
     io.observe(map);
 
-    // open the lightbox on node click (delegated)
-    map.addEventListener('click', (ev) => {
-      const node = (ev.target as HTMLElement).closest('.c-node') as HTMLElement | null;
+    // hover/focus neighborhood lighting + star burst
+    const allLines = Array.from(map.querySelectorAll('.lines line')) as unknown as SVGLineElement[];
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function light(node: HTMLElement) {
+      const slug = node.dataset.slug;
+      map!.classList.add('focused');
+      node.classList.add('lit');
+      for (const l of allLines) {
+        l.classList.toggle('lit', l.dataset.a === slug || l.dataset.b === slug);
+      }
+      if (!reduce) {
+        const burst = document.createElement('span');
+        burst.className = 'node-burst';
+        node.appendChild(burst);
+        burst.animate(
+          [
+            { transform: 'translate(-50%,-50%) scale(0.3)', opacity: 0.9 },
+            { transform: 'translate(-50%,-50%) scale(2.1)', opacity: 0 },
+          ],
+          { duration: 600, easing: 'ease-out' }
+        ).onfinish = () => burst.remove();
+      }
+    }
+    function unlight(node: HTMLElement) {
+      map!.classList.remove('focused');
+      node.classList.remove('lit');
+      for (const l of allLines) l.classList.remove('lit');
+    }
+
+    for (const node of Array.from(map.querySelectorAll('.c-node')) as HTMLElement[]) {
+      node.addEventListener('mouseenter', () => light(node));
+      node.addEventListener('mouseleave', () => unlight(node));
+      node.addEventListener('focus', () => light(node));
+      node.addEventListener('blur', () => unlight(node));
+    }
+  }
+
+  // open the lightbox on node or card click (delegated per container),
+  // passing the click origin so the viewer can scale out from it
+  for (const host of Array.from(document.querySelectorAll('#gallery .constellation, #gallery .c-cards'))) {
+    host.addEventListener('click', (ev) => {
+      const node = (ev.target as HTMLElement).closest('.c-node, .c-card') as HTMLElement | null;
       if (!node) return;
-      const index = Number(node.dataset.index);
-      window.dispatchEvent(new CustomEvent('lightbox:open', { detail: { index } }));
+      const r = node.getBoundingClientRect();
+      window.dispatchEvent(
+        new CustomEvent('lightbox:open', {
+          detail: { index: Number(node.dataset.index), originX: r.left + r.width / 2, originY: r.top + r.height / 2 },
+        })
+      );
     });
   }
 </script>

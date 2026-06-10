@@ -25,6 +25,28 @@
   /* layout */
   --maxw: 1100px;
   --nav-h: 74px;
+
+  /* spacing scale */
+  --space-1: 8px;
+  --space-2: 14px;
+  --space-3: 24px;
+  --space-4: 36px;
+  --space-5: 60px;
+  --space-6: 90px;
+
+  /* radii */
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 18px;
+  --radius-pill: 999px;
+
+  /* shadows + glows */
+  --shadow-deep: 0 18px 50px rgba(0, 0, 0, 0.6);
+  --shadow-card: 0 16px 40px rgba(0, 0, 0, 0.5);
+  --glow-cyan: 0 0 34px rgba(74, 234, 255, 0.16);
+  --glow-cyan-strong: 0 0 46px rgba(74, 234, 255, 0.3);
+  --glow-magenta: 0 0 46px rgba(217, 70, 239, 0.3);
+  --glow-gold: 0 0 24px rgba(233, 196, 106, 0.3);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -62,18 +84,7 @@ img { display: block; max-width: 100%; }
 /* ---------- shared structural helpers ---------- */
 .wrap { position: relative; z-index: 2; }
 
-.section { max-width: var(--maxw); margin: 0 auto; padding: 90px 24px; }
-
-.eyebrow {
-  font-family: var(--font-body);
-  font-weight: 500;
-  font-size: 10px;
-  letter-spacing: 0.4em;
-  text-transform: uppercase;
-  color: rgba(74, 234, 255, 0.65);
-  text-align: center;
-  margin-bottom: 12px;
-}
+.section { max-width: var(--maxw); margin: 0 auto; padding: var(--space-6) var(--space-3); }
 
 .section-title {
   font-family: var(--font-head);
@@ -89,7 +100,7 @@ img { display: block; max-width: 100%; }
   font-size: 17px;
   color: rgba(226, 232, 244, 0.6);
   text-align: center;
-  margin-top: 8px;
+  margin-top: var(--space-1);
 }
 
 /* divider used between sections */
@@ -99,21 +110,22 @@ img { display: block; max-width: 100%; }
   justify-content: center;
   gap: 16px;
   max-width: 480px;
-  margin: 8px auto;
+  margin: var(--space-1) auto;
   opacity: 0.7;
 }
 .div .ln { flex: 1; height: 1px; background: linear-gradient(to right, transparent, rgba(74, 234, 255, 0.35), transparent); }
 .div .d { width: 8px; height: 8px; background: var(--cyan); transform: rotate(45deg); box-shadow: 0 0 12px var(--cyan); }
 
-/* pill buttons */
+/* pill buttons, with a small sparkle that wakes on hover */
 .btn {
+  position: relative;
   display: inline-block;
   font-family: var(--font-body);
   font-weight: 500;
   font-size: 13px;
   letter-spacing: 0.08em;
   padding: 13px 28px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 1px solid rgba(74, 234, 255, 0.4);
   color: var(--moon);
   background: rgba(74, 234, 255, 0.06);
@@ -121,13 +133,33 @@ img { display: block; max-width: 100%; }
   cursor: pointer;
   transition: background .3s ease, box-shadow .3s ease, transform .3s ease;
 }
-.btn:hover { background: rgba(74, 234, 255, 0.16); box-shadow: 0 0 24px rgba(74, 234, 255, 0.3); transform: translateY(-1px); }
+.btn::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 12px;
+  width: 7px;
+  height: 7px;
+  background: radial-gradient(circle, #fff 0%, rgba(74, 234, 255, 0.9) 40%, transparent 70%);
+  opacity: 0;
+  transform: scale(0.2);
+  transition: opacity .3s ease, transform .3s ease;
+  pointer-events: none;
+}
+.btn:hover { background: rgba(74, 234, 255, 0.16); box-shadow: var(--glow-cyan-strong); transform: translateY(-1px); }
+.btn:hover::after { opacity: 1; transform: scale(1); animation: sparklepop 0.9s ease-in-out infinite; }
 .btn.ghost { border-color: rgba(233, 196, 106, 0.45); background: rgba(233, 196, 106, 0.05); }
-.btn.ghost:hover { background: rgba(233, 196, 106, 0.14); box-shadow: 0 0 24px rgba(233, 196, 106, 0.3); }
+.btn.ghost:hover { background: rgba(233, 196, 106, 0.14); box-shadow: var(--glow-gold); }
+.btn.ghost::after { background: radial-gradient(circle, #fff 0%, rgba(233, 196, 106, 0.9) 40%, transparent 70%); }
 
 /* scroll reveal: only hide when JS is present (html.js), so a no-JS page
-   still shows all content. .in reveals them. */
-html.js .reveal { opacity: 0; transform: translateY(26px); transition: opacity .9s ease, transform .9s ease; }
+   still shows all content. .in reveals them. --rd staggers siblings. */
+html.js .reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity .9s ease, transform .9s ease;
+  transition-delay: var(--rd, 0s);
+}
 html.js .reveal.in { opacity: 1; transform: none; }
 
 /* ============================================================
@@ -138,6 +170,9 @@ html.js .reveal.in { opacity: 1; transform: none; }
 @keyframes f1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(70px,50px) scale(1.15); } }
 @keyframes f2 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-60px,-40px) scale(1.12); } }
 @keyframes f3 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(40px,-60px) scale(1.2); } }
+
+/* nebula hue breathing: stacked tint layers cross-fade (opacity only) */
+@keyframes nebbreathe { 0%,100% { opacity: 0; } 50% { opacity: 0.85; } }
 
 /* star twinkle */
 @keyframes tw { 0%,100% { opacity: .2; transform: scale(1); } 50% { opacity: 1; transform: scale(1.6); } }
@@ -152,8 +187,14 @@ html.js .reveal.in { opacity: 1; transform: none; }
 }
 @keyframes faetwinkle { 0%,100% { filter: brightness(1); } 50% { filter: brightness(1.9); } }
 
-/* loader bee wing flutter (fast, small) */
-@keyframes wing { 0%,100% { transform: scaleX(1) rotate(0deg); } 50% { transform: scaleX(0.82) rotate(-3deg); } }
+/* bee wing beat: wings-only layer, origin near the wing root */
+@keyframes beeflap {
+  0%, 100% { transform: scaleY(1) scaleX(1) rotate(0deg); }
+  50%      { transform: scaleY(0.55) scaleX(1.06) rotate(-5deg); }
+}
+
+/* button hover sparkle */
+@keyframes sparklepop { 0%,100% { transform: scale(0.7); opacity: 0.6; } 50% { transform: scale(1.15); opacity: 1; } }
 
 /* wordmark glow up (loader handoff) */
 @keyframes glowup {
@@ -162,13 +203,32 @@ html.js .reveal.in { opacity: 1; transform: none; }
   100% { opacity: 1; transform: none; filter: drop-shadow(0 0 30px rgba(217,70,239,0.35)); }
 }
 
-/* hero bee idle hover (used only as a fallback / reduced motion park) */
-@keyframes hover { 0%,100% { transform: translate(0,0) rotate(6deg); } 50% { transform: translate(-12px,-12px) rotate(-4deg); } }
-
 /* landing burst ring */
 @keyframes burst {
   0%   { transform: translate(-50%,-50%) scale(0.2); opacity: 0.9; }
   100% { transform: translate(-50%,-50%) scale(2.4); opacity: 0; }
+}
+
+/* prismatic rim rotation (featured framing) */
+@keyframes prism {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* constellation line pulse: a dash of light travels the hovered lines */
+@keyframes linepulse { from { stroke-dashoffset: 1; } to { stroke-dashoffset: -1; } }
+
+/* ============================================================
+   tab hidden: the Starfield island toggles html.tab-hidden on
+   visibilitychange so every decorative CSS loop pauses too.
+   ============================================================ */
+html.tab-hidden .neb,
+html.tab-hidden .neb::before,
+html.tab-hidden .neb::after,
+html.tab-hidden .star,
+html.tab-hidden .mote,
+html.tab-hidden .bee-wings {
+  animation-play-state: paused !important;
 }
 
 /* ============================================================
@@ -186,5 +246,5 @@ html.js .reveal.in { opacity: 1; transform: none; }
   .reveal { opacity: 1 !important; transform: none !important; }
 
   /* hide the purely-decorative ambient layers so nothing flickers */
-  #stars, .fae-dust, .shooting-layer, .sparkle-trail { display: none !important; }
+  #stars, .fae-dust, .shooting-layer, .sparkle-trail, .milky-way { display: none !important; }
 }
