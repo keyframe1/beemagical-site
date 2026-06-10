@@ -1,8 +1,9 @@
 # Bee Magical
 
-The production website for the artist Bee Magical. Bright, fae-touched paintings
-charted across a dark, starlit sky, with a flying bee that guides you through the
-gallery. Built with Astro and TypeScript, static output, zero-config deploy on Vercel.
+The production website for the artist Bee Magical. Space and aurora paintings,
+plus portrait and pet commissions, charted across a dark, starlit sky, with a
+flying bee that guides you through the gallery. Built with Astro and TypeScript,
+static output, zero-config deploy on Vercel.
 
 ## Run locally
 
