@@ -1,22 +1,26 @@
 ---
 /**
- * Contact.astro - the calm closer and the bottom of the page. Hannah's
- * self-portrait looms behind the section: screen blend so its dark starry
- * ground merges into the page sky, a radial edge mask so only she emerges,
- * no rectangle. The painting's top third is empty sky and her face sits low
- * in the frame, so the image keeps its natural aspect, scaled large and
- * lifted with a negative top offset to put her face in the upper-center,
- * filling the open area between the heading and the form. The form sits
- * below her chin; nothing opaque covers her face. A quiet presence at rest;
- * every 9 to 16 seconds a soft cosmic-thunder flash eases her up
- * with a cyan and violet glow and a faint lightning streak, holds a breath,
- * then fades back over about a second. Soft attack only, never an instant
- * strobe, gated to the section being in view and the tab visible, opacity
- * only. Reduced motion: no flashing, fixed gentle opacity.
- * The form has no panel: it floats on the sky, and only the input fields
- * carry a soft translucent backing for legibility. The inquiry form posts
- * to Formspree. The external links (Instagram, Ko-fi) live in the nav and
- * the footer, not here. No em dashes in any copy.
+ * Contact.astro - the calm closer and the bottom of the page. No visible
+ * heading: Hannah's self-portrait is the silent focal point, with a
+ * visually-hidden h2 keeping the anchor and document outline for screen
+ * readers. The painting's top third is empty sky and her face sits low in
+ * the frame, so the image keeps its natural aspect, scaled large and lifted
+ * with a negative top offset to put her face in the upper-center, with a
+ * clear breath of sky between her chin and the form below. Screen blend
+ * merges the painting's dark starry ground into the page sky and a radial
+ * mask dissolves every edge; nothing opaque covers her face. A quiet
+ * presence at rest; every 9 to 16 seconds a soft cosmic-thunder flash eases
+ * her up with a cyan and violet glow and a faint lightning streak, holds a
+ * breath, then fades back over about a second. Soft attack only, never an
+ * instant strobe, gated to the section being in view and the tab visible,
+ * opacity only. Reduced motion: no flashing, fixed gentle opacity.
+ * The form is unboxed and reads as constellations: each field is traced by
+ * a faint cyan-into-violet line anchored by glowing corner stars (the same
+ * star-dot language as the gallery and commission cards), lighting up in
+ * cyan on focus. Only the field interiors carry a whisper of darkening and
+ * blur for legibility. The inquiry form posts to Formspree. The external
+ * links (Instagram, Ko-fi) live in the nav and the footer, not here.
+ * No em dashes in any copy.
  */
 import { Image } from 'astro:assets';
 import selfPortrait from '../assets/art/bee-untitled-self.jpg';
@@ -45,27 +49,48 @@ const FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_ME';
   </div>
 
   <div class="section contact">
-    <div class="reveal">
-      <h2 class="section-title">Contact</h2>
-      <p class="section-desc">Commissions, prints, and originals.</p>
-    </div>
+    <h2 class="sr-only">Contact</h2>
 
     <form class="cform reveal" data-endpoint={FORMSPREE_ENDPOINT}>
       <div class="row">
         <label>
           <span>Name</span>
-          <input type="text" name="name" autocomplete="name" required />
+          <span class="cfield">
+            <input type="text" name="name" autocomplete="name" required />
+            <i class="fstar tl" aria-hidden="true"></i>
+            <i class="fstar tr" aria-hidden="true"></i>
+            <i class="fstar bl" aria-hidden="true"></i>
+            <i class="fstar br" aria-hidden="true"></i>
+          </span>
         </label>
         <label>
           <span>Email</span>
-          <input type="email" name="email" autocomplete="email" required />
+          <span class="cfield">
+            <input type="email" name="email" autocomplete="email" required />
+            <i class="fstar tl" aria-hidden="true"></i>
+            <i class="fstar tr" aria-hidden="true"></i>
+            <i class="fstar bl" aria-hidden="true"></i>
+            <i class="fstar br" aria-hidden="true"></i>
+          </span>
         </label>
       </div>
       <label>
         <span>Which work, and what are you hoping for</span>
-        <textarea name="message" rows="4" required></textarea>
+        <span class="cfield">
+          <textarea name="message" rows="4" required></textarea>
+          <i class="fstar tl" aria-hidden="true"></i>
+          <i class="fstar tr" aria-hidden="true"></i>
+          <i class="fstar bl" aria-hidden="true"></i>
+          <i class="fstar br" aria-hidden="true"></i>
+        </span>
       </label>
-      <button class="btn" type="submit">Send it</button>
+      <button class="btn cbtn" type="submit">
+        Send it
+        <i class="fstar tl" aria-hidden="true"></i>
+        <i class="fstar tr" aria-hidden="true"></i>
+        <i class="fstar bl" aria-hidden="true"></i>
+        <i class="fstar br" aria-hidden="true"></i>
+      </button>
       <p class="cform-status" role="status" aria-live="polite"></p>
     </form>
   </div>
@@ -76,6 +101,19 @@ const FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_ME';
   .contact-shell {
     position: relative;
     overflow: hidden;
+  }
+
+  /* visually hidden but present for screen readers and the outline */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
   }
 
   /* ---------- the looming presence ---------- */
@@ -90,13 +128,14 @@ const FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_ME';
      page sky; the radial mask hugs her head and halo (her face sits around
      58% down the painting) so every edge and the signature dissolve. The
      negative top crops the painting's empty upper sky out of the section,
-     landing her eyes in the open area just under the heading. */
+     landing her face in the open upper-center, the hero of the section,
+     with the form a clear breath below her chin. */
   .presence-img {
     position: absolute;
     left: 50%;
-    top: clamp(-130px, calc(-16.5vw + 84px), 80px);
+    top: clamp(-160px, calc(-11.3vw - 6px), -20px);
     transform: translateX(-50%);
-    width: clamp(320px, 70vw, 900px);
+    width: clamp(320px, 74vw, 940px);
     height: auto;
     mix-blend-mode: screen;
     opacity: 0.2;
@@ -104,23 +143,23 @@ const FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_ME';
     -webkit-mask-image: radial-gradient(ellipse 46% 42% at 50% 62%, #000 42%, transparent 76%);
     will-change: opacity;
   }
-  /* cyan and violet storm light that wakes with each flash */
+  /* cyan and violet storm light that wakes with each flash, centered on her */
   .presence-glow {
     position: absolute;
     inset: 0;
     opacity: 0;
     mix-blend-mode: screen;
     background:
-      radial-gradient(ellipse 40% 32% at 42% 22%, rgba(74, 234, 255, 0.4), transparent 70%),
-      radial-gradient(ellipse 44% 36% at 58% 30%, rgba(155, 48, 255, 0.42), transparent 70%);
+      radial-gradient(ellipse 38% 30% at 44% 20%, rgba(74, 234, 255, 0.4), transparent 70%),
+      radial-gradient(ellipse 42% 34% at 57% 28%, rgba(155, 48, 255, 0.42), transparent 70%);
     will-change: opacity;
   }
   /* faint cosmic lightning: thin blurred streaks near her, opacity only */
   .presence-bolt {
     position: absolute;
     width: 3px;
-    height: 30%;
-    top: 4%;
+    height: 32%;
+    top: 2%;
     opacity: 0;
     border-radius: 3px;
     background: linear-gradient(to bottom,
@@ -132,8 +171,8 @@ const FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_ME';
     filter: blur(1.5px) drop-shadow(0 0 12px rgba(74, 234, 255, 0.7)) drop-shadow(0 0 28px rgba(155, 48, 255, 0.5));
     will-change: opacity;
   }
-  .presence-bolt.b1 { left: 34%; transform: rotate(14deg); }
-  .presence-bolt.b2 { left: 65%; transform: rotate(-11deg); height: 25%; top: 8%; }
+  .presence-bolt.b1 { left: 35%; transform: rotate(14deg); }
+  .presence-bolt.b2 { left: 64%; transform: rotate(-11deg); height: 26%; top: 7%; }
 
   /* ---------- the content column ---------- */
   .contact {
@@ -141,21 +180,19 @@ const FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_ME';
     z-index: 1;
     max-width: 760px;
   }
-  .contact .section-title,
-  .contact .section-desc { text-shadow: 0 2px 22px rgba(3, 5, 14, 0.85); }
 
-  /* the form floats on the sky below her chin: the gap between heading and
-     form is sized to hold her face, so the three read as one composition.
-     No panel and no solid fill anywhere around it. */
+  /* the form floats on the sky below her: the space above it holds her
+     face plus a comfortable gap under her chin, so she reads as the hero
+     and the form waits beneath. No panel and no solid fill anywhere. */
   .cform {
-    margin-top: clamp(130px, 22vw, 280px);
+    margin-top: clamp(160px, calc(34.9vw + 41px), 520px);
     display: flex;
     flex-direction: column;
     gap: 18px;
   }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
   .cform label { display: flex; flex-direction: column; gap: 7px; }
-  .cform label span {
+  .cform label > span:first-child {
     font-family: var(--font-body);
     font-weight: 500;
     font-size: 11px;
@@ -164,29 +201,133 @@ const FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_ME';
     color: rgba(226, 232, 244, 0.6);
     text-shadow: 0 1px 8px rgba(3, 5, 14, 0.9);
   }
-  /* only the fields get a backing: a soft translucent wash plus a faint
-     blur of whatever drifts behind them, so they stay legible mid-flash
-     without boxing the whole form in */
-  .cform input, .cform textarea {
+
+  /* ---------- constellation fields ---------- */
+  /* the wrapper draws the constellation; the control inside stays nearly
+     transparent so the sky and her portrait show through */
+  .cfield {
+    position: relative;
+    display: block;
+    border-radius: 12px;
+  }
+  /* the connecting line: a thin cyan-into-violet ring, masked so only a
+     1px gradient trace remains, soft and low opacity at rest */
+  .cfield::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    padding: 1px;
+    background: linear-gradient(135deg,
+      rgba(74, 234, 255, 0.55),
+      rgba(155, 48, 255, 0.4) 50%,
+      rgba(217, 70, 239, 0.5));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0.55;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  .cfield input,
+  .cfield textarea {
+    width: 100%;
     font-family: var(--font-body);
     font-weight: 300;
     font-size: 16px;
     color: var(--moon);
-    background: rgba(5, 7, 26, 0.45);
-    backdrop-filter: blur(7px);
-    -webkit-backdrop-filter: blur(7px);
-    border: 1px solid rgba(74, 234, 255, 0.25);
+    background: rgba(5, 7, 26, 0.3);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: none;
     border-radius: 12px;
     padding: 13px 15px;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
     resize: vertical;
   }
-  .cform input:focus, .cform textarea:focus {
-    outline: none;
-    border-color: rgba(74, 234, 255, 0.6);
-    box-shadow: 0 0 18px rgba(74, 234, 255, 0.2);
+  /* focus: the constellation lights up. The ring brightens, a cyan glow
+     wakes, and the corner stars flare. Box-shadow transitions on focus are
+     state changes, not running animations. */
+  .cfield:focus-within {
+    box-shadow: 0 0 20px rgba(74, 234, 255, 0.22);
   }
-  .cform .btn { align-self: flex-start; cursor: pointer; }
+  .cfield:focus-within::before {
+    opacity: 1;
+    background: linear-gradient(135deg,
+      rgba(74, 234, 255, 0.95),
+      rgba(74, 234, 255, 0.55) 50%,
+      rgba(155, 48, 255, 0.7));
+  }
+  .cfield input:focus,
+  .cfield textarea:focus { outline: none; }
+
+  /* corner stars: the anchors of each constellation, matching the star-dot
+     nodes on the gallery and commission cards. The twinkle lives on the
+     inner pseudo so focus can scale and brighten the dot itself. */
+  .fstar {
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    opacity: 0.65;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .fstar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, #fff 0%, rgba(74, 234, 255, 0.9) 40%, transparent 70%);
+    animation: tw 3.4s ease-in-out infinite;
+  }
+  .fstar.tl { top: -4px; left: -4px; }
+  .fstar.tr { top: -4px; right: -4px; }
+  .fstar.bl { bottom: -4px; left: -4px; }
+  .fstar.br { bottom: -4px; right: -4px; }
+  .fstar.tr::before { animation-delay: 0.8s; }
+  .fstar.bl::before { animation-delay: 1.7s; }
+  .fstar.br::before { animation-delay: 2.5s; }
+  .cfield:focus-within .fstar {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+  /* the twinkle runs only while the section is on screen with the tab
+     visible; reduced motion stops it globally, leaving static dots */
+  .contact-shell:not(.lit) .fstar::before,
+  :global(html.tab-hidden) .fstar::before {
+    animation-play-state: paused;
+  }
+
+  /* the button keeps its pill shape and gains the same constellation:
+     a faint pill-traced ring and corner stars, brightening on hover/focus */
+  .cbtn {
+    align-self: flex-start;
+    cursor: pointer;
+    border-color: transparent;
+  }
+  .cbtn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-pill);
+    padding: 1px;
+    background: linear-gradient(135deg,
+      rgba(74, 234, 255, 0.55),
+      rgba(155, 48, 255, 0.4) 50%,
+      rgba(217, 70, 239, 0.5));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  .cbtn:hover::before,
+  .cbtn:focus-visible::before { opacity: 1; }
+  .cbtn:hover .fstar,
+  .cbtn:focus-visible .fstar { opacity: 1; transform: scale(1.25); }
+
   .cform-status {
     font-family: var(--font-body);
     font-weight: 400;
@@ -199,13 +340,11 @@ const FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_ME';
 
   @media (max-width: 560px) {
     .row { grid-template-columns: 1fr; }
-    /* small screens: she sits a touch lower and larger, filling the open
-       area between the heading and the form, which tracks her chin */
-    .presence-img { width: 92vw; top: 80px; }
-    .cform { margin-top: clamp(120px, calc(64vw - 111px), 280px); }
   }
 
-  /* reduced motion: no lightning, no flicker; she simply rests in the sky */
+  /* reduced motion: no lightning, no flicker; she simply rests in the sky.
+     global.css already stops every animation, so the corner stars and the
+     constellation lines hold as static dots and traces. */
   @media (prefers-reduced-motion: reduce) {
     .presence-img { opacity: 0.2; }
     .presence-glow, .presence-bolt { display: none; }
@@ -249,11 +388,13 @@ const FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_ME';
     });
   }
 
-  // ---------- cosmic thunder ----------
+  // ---------- cosmic thunder + constellation gating ----------
   // A soft flash every 9 to 16 seconds: ease her up to 0.55 with the glow
   // over ~150-200ms, hold ~80ms, ease back down over ~1-1.4s, sometimes with
   // one gentle secondary flicker on the way down. Opacity only, gated to the
   // section being in view and the tab visible. Never under reduced motion.
+  // The same observer toggles .lit on the shell so the corner-star twinkle
+  // runs only while the section is on screen.
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const shell = document.getElementById('contact');
   const img = document.querySelector('.presence-img') as HTMLElement | null;
@@ -323,6 +464,7 @@ const FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_ME';
       (entries) => {
         for (const e of entries) {
           inView = e.isIntersecting;
+          shell.classList.toggle('lit', inView);
           if (inView && !document.hidden) schedule();
           else window.clearTimeout(timer);
         }
