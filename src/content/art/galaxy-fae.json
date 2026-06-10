@@ -5,6 +5,6 @@
   "note": "A fae face crowned with a violet nebula, eyes lit like distant stars.",
   "image": "../../assets/art/ultraviolet.jpg",
   "x": 72,
-  "y": 30,
-  "links": ["moon-clouds"]
+  "y": 22,
+  "links": ["above-the-clouds", "rainbow-aurora"]
 }

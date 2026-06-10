@@ -5,6 +5,6 @@
   "image": "../../assets/art/luna.jpg",
   "note": "A moon-crowned face in storm clouds above the sea.",
   "x": 50,
-  "y": 38,
-  "links": ["moon-clouds", "the-return"]
+  "y": 37,
+  "links": ["time-vortex", "rainbow-aurora", "moon-clouds"]
 }

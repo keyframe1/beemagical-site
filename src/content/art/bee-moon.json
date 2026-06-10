@@ -5,6 +5,6 @@
   "note": "The Bee Magical emblem: a neon bee on a crescent moon.",
   "image": "../../assets/art/bee-moon.jpg",
   "x": 50,
-  "y": 14,
-  "links": []
+  "y": 12,
+  "links": ["the-return", "galaxy-fae"]
 }

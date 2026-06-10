@@ -6,7 +6,7 @@
   "note": "A green and purple aurora arcing over a dark treeline.",
   "status": "sold",
   "image": "../../assets/art/aurora2018.jpg",
-  "x": 38,
-  "y": 66,
-  "links": ["aurora-wolf"]
+  "x": 28,
+  "y": 70,
+  "links": ["tardis-nebula", "the-henge"]
 }

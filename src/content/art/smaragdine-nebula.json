@@ -6,7 +6,7 @@
   "note": "A green nebula scattered across a field of stars.",
   "status": "sold",
   "image": "../../assets/art/smarag.jpg",
-  "x": 10,
-  "y": 62,
-  "links": ["tardis-nebula"]
+  "x": 12,
+  "y": 60,
+  "links": ["aurora-borealis"]
 }

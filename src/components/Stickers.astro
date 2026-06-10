@@ -1,0 +1,168 @@
+---
+/**
+ * Stickers.astro - four die-cut sticker designs floating directly on the
+ * celestial sky. These are transparent PNGs with no background, so they sit
+ * on the sky with nothing behind them: no cards, no panels. A soft glow
+ * (drop-shadow on the transparent shape) lifts each off the dark. Each one
+ * bobs slowly on its own phase and speed, drifting independently, and lifts
+ * a little on hover. Transform and opacity only; the bob runs only while the
+ * section is in view and the tab is visible, paused otherwise. Reduced motion
+ * holds them still (global.css stops all animation). Title and price sit
+ * under each; a single Ko-fi button leads out below the row.
+ */
+import { Image } from 'astro:assets';
+import gvo from '../assets/stickers/gvo.png';
+import lil from '../assets/stickers/lil.png';
+import bk from '../assets/stickers/bk.png';
+import chlta from '../assets/stickers/chlta.png';
+
+const KOFI = 'https://ko-fi.com/bee_magical';
+
+const stickers = [
+  { image: gvo, title: 'Good Vibes Only', alt: 'Good Vibes Only sticker in iridescent bubble lettering' },
+  { image: lil, title: 'Love is Love', alt: 'Love is Love sticker with a rainbow gradient and a pink heart' },
+  { image: bk, title: 'Bee Kind', alt: 'Bee Kind sticker in pink glittered script with a little bee' },
+  { image: chlta, title: '¡Sé buena gente... O chancleta!', alt: 'Se buena gente o chancleta sticker with a brown chancleta sandal' },
+];
+---
+
+<section id="stickers" class="section">
+  <div class="reveal">
+    <h2 class="section-title">Stickers</h2>
+    <p class="section-desc">Die-cut and ready to stick. Five dollars each.</p>
+  </div>
+
+  <div class="sticker-row reveal" role="list">
+    {stickers.map((s) => (
+      <figure class="sticker" role="listitem">
+        <span class="float">
+          <Image src={s.image} alt={s.alt} width={440} loading="lazy" />
+        </span>
+        <figcaption class="sticker-cap">
+          <span class="sticker-title">{s.title}</span>
+          <span class="sticker-price">$5</span>
+        </figcaption>
+      </figure>
+    ))}
+  </div>
+
+  <div class="sticker-cta reveal">
+    <a class="btn" href={KOFI} target="_blank" rel="noopener">Get them on Ko-fi</a>
+  </div>
+</section>
+
+<style>
+  .sticker-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-5);
+    margin-top: var(--space-5);
+    align-items: end;
+  }
+
+  /* no card, no panel: the die-cut shape floats straight on the sky */
+  .sticker {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  /* the bobbing wrapper: transform only, paused unless the section is in
+     view and the tab visible. Different duration and a negative delay per
+     sticker so they drift on their own phase and speed. */
+  .float {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: clamp(150px, 20vw, 210px);
+    animation: stickerbobA 7s ease-in-out infinite;
+    animation-play-state: paused;
+    will-change: transform;
+  }
+  .sticker-row.in-view .float { animation-play-state: running; }
+  :global(html.tab-hidden) .float { animation-play-state: paused; }
+
+  .sticker:nth-child(1) .float { animation-name: stickerbobA; animation-duration: 6s;   animation-delay: -0.4s; }
+  .sticker:nth-child(2) .float { animation-name: stickerbobB; animation-duration: 7.6s; animation-delay: -2.6s; }
+  .sticker:nth-child(3) .float { animation-name: stickerbobA; animation-duration: 8.4s; animation-delay: -1.3s; }
+  .sticker:nth-child(4) .float { animation-name: stickerbobB; animation-duration: 6.8s; animation-delay: -3.7s; }
+
+  /* the soft glow that lifts the transparent shape off the dark sky, plus a
+     gentle hover lift and scale. Filter drop-shadow follows the die-cut edge
+     instead of a rectangular box, since there is no card. */
+  .float :global(img) {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: clamp(150px, 20vw, 210px);
+    filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 22px rgba(74, 234, 255, 0.28));
+    transition: transform 0.4s ease, filter 0.4s ease;
+  }
+  .sticker:hover .float :global(img),
+  .sticker:focus-within .float :global(img) {
+    transform: translateY(-6px) scale(1.06);
+    filter: drop-shadow(0 12px 26px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 30px rgba(74, 234, 255, 0.45));
+  }
+
+  .sticker-cap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    text-align: center;
+  }
+  .sticker-title {
+    font-family: var(--font-head);
+    font-size: clamp(17px, 2vw, 22px);
+    color: var(--moon);
+    line-height: 1.2;
+  }
+  .sticker-price {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    color: var(--cyan);
+    text-shadow: 0 0 12px rgba(74, 234, 255, 0.4);
+  }
+
+  .sticker-cta { margin-top: var(--space-5); text-align: center; }
+
+  /* two by two on small screens, still floating free on the sky */
+  @media (max-width: 640px) {
+    .sticker-row {
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-4);
+    }
+  }
+
+  @keyframes stickerbobA {
+    0%, 100% { transform: translateY(0) rotate(-1.2deg); }
+    50%      { transform: translateY(-10px) rotate(1.2deg); }
+  }
+  @keyframes stickerbobB {
+    0%, 100% { transform: translateY(0) rotate(1deg); }
+    50%      { transform: translateY(-8px) rotate(-1deg); }
+  }
+</style>
+
+<script>
+  // Run the bob only while the row is on screen; pause it otherwise. The
+  // Starfield island already toggles html.tab-hidden on visibilitychange,
+  // and global.css stops all animation under reduced motion, so this only
+  // needs to track viewport presence.
+  const row = document.querySelector('#stickers .sticker-row');
+  if (row && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) row.classList.toggle('in-view', e.isIntersecting);
+      },
+      { threshold: 0.15 }
+    );
+    io.observe(row);
+  } else {
+    row?.classList.add('in-view');
+  }
+</script>
