@@ -227,7 +227,8 @@ html.tab-hidden .neb::before,
 html.tab-hidden .neb::after,
 html.tab-hidden .star,
 html.tab-hidden .mote,
-html.tab-hidden .bee-wings {
+html.tab-hidden .bee-wings,
+html.tab-hidden .strip-track {
   animation-play-state: paused !important;
 }
 

@@ -1,7 +1,9 @@
 ---
 /**
- * About.astro - one line and three stats. Only location reference is
- * Louisiana. No em dashes anywhere.
+ * About.astro - one line, a signature time-lapse in a star-framed panel,
+ * and three stats. The clip is The Return mid-paint, muted and looped,
+ * playing only on screen with the tab visible, poster under reduced
+ * motion. Only location reference is Louisiana. No em dashes anywhere.
  */
 ---
 
@@ -12,6 +14,28 @@
   <div class="about-body reveal">
     <p class="lead">Bright, fae-touched paintings, made in Louisiana.</p>
   </div>
+
+  <figure class="about-panel reveal">
+    <span class="ap-star tl" aria-hidden="true"></span>
+    <span class="ap-star tr" aria-hidden="true"></span>
+    <span class="ap-star bl" aria-hidden="true"></span>
+    <span class="ap-star br" aria-hidden="true"></span>
+    <video
+      class="about-clip"
+      muted
+      loop
+      playsinline
+      preload="metadata"
+      poster="/video/celestial-process-poster.jpg"
+      aria-hidden="true"
+      data-autovideo
+    >
+      <source src="/video/celestial-process.webm" type="video/webm" />
+      <source src="/video/celestial-process.mp4" type="video/mp4" />
+    </video>
+    <figcaption class="ap-cap">The Return, mid-paint. Every sky starts as a sketch.</figcaption>
+  </figure>
+
   <div class="stats">
     <div class="stat reveal"><span class="stat-big">Originals</span><span class="stat-sub">one of a kind</span></div>
     <div class="stat reveal"><span class="stat-big">Prints from $35</span><span class="stat-sub">open editions</span></div>
@@ -27,6 +51,46 @@
     color: var(--gold);
     text-shadow: 0 0 22px rgba(233, 196, 106, 0.3);
     line-height: 1.4;
+  }
+
+  /* the star-framed panel: glowing border, four corner stars */
+  .about-panel {
+    position: relative;
+    max-width: 420px;
+    margin: var(--space-4) auto 0;
+    padding: 0;
+  }
+  .about-clip {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    display: block;
+    border: 1px solid rgba(233, 196, 106, 0.4);
+    border-radius: var(--radius-md);
+    box-shadow: var(--glow-gold), var(--shadow-card);
+    background: #05071a;
+  }
+  .ap-star {
+    position: absolute;
+    width: 11px;
+    height: 11px;
+    background: radial-gradient(circle, #fff 0%, rgba(233, 196, 106, 0.9) 35%, transparent 70%);
+    pointer-events: none;
+    z-index: 1;
+    animation: tw 3.6s ease-in-out infinite;
+  }
+  .ap-star.tl { top: -5px; left: -5px; }
+  .ap-star.tr { top: -5px; right: -5px; animation-delay: 0.9s; }
+  .ap-star.bl { bottom: 26px; left: -5px; animation-delay: 1.8s; }
+  .ap-star.br { bottom: 26px; right: -5px; animation-delay: 2.7s; }
+  .ap-cap {
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    color: rgba(226, 232, 244, 0.55);
+    text-align: center;
+    margin-top: 12px;
   }
 
   .stats {
@@ -62,3 +126,9 @@
     .stat { padding: 16px 14px; }
   }
 </style>
+
+<script>
+  import { manageVideo } from '../lib/video-client';
+  const clip = document.querySelector('.about-clip') as HTMLVideoElement | null;
+  if (clip) manageVideo(clip, { group: 'ambient' });
+</script>

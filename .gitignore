@@ -16,3 +16,7 @@ dist/
 
 # os
 .DS_Store
+
+# raw Instagram screen recordings (source footage, processed into public/video and src/assets/art)
+bee*.mp4
+work/

@@ -16,11 +16,38 @@ Then open the URL it prints (usually http://localhost:4321). Other scripts:
 - `npm run build` builds the static site into `dist/`.
 - `npm run preview` serves the built site locally.
 
+## Real art from the footage
+
+Every still and clip on the site was extracted from Hannah's Instagram screen
+recordings; `ASSETS.md` lists each asset and where it came from. The stills and
+grid thumbnails are footage-resolution placeholders. They are wired in now so
+every piece is represented, and each one should be swapped for a real
+high-resolution photo or export when available.
+
+To replace a placeholder still: drop the high-res file in `src/assets/art/`
+under the same name (or update the `image` path in its JSON entry). Nothing
+else changes; the components read sizes from the image itself.
+
+To replace a clip: re-encode the new footage with the same recipe and
+overwrite the files in `public/video/` (keep the same base names, or update
+the paths in `Hero.astro`, `About.astro`, and `Commissions.astro`):
+
+```bash
+ffmpeg -ss START -t DUR -i source.mp4 -vf "fps=30" -an -c:v libx264 -crf 25 \
+  -preset veryfast -movflags +faststart -pix_fmt yuv420p public/video/name.mp4
+ffmpeg -i public/video/name.mp4 -an -c:v libvpx-vp9 -crf 34 -b:v 0 public/video/name.webm
+ffmpeg -ss 8 -i public/video/name.mp4 -frames:v 1 -q:v 3 public/video/name-poster.jpg
+```
+
+Every video needs a poster jpg, stays muted with no audio track, and is wired
+through `src/lib/video-client.ts` so it pauses offscreen, pauses when the tab
+is hidden, and never autoplays under `prefers-reduced-motion`.
+
 ## Add a painting
 
 The gallery is a content collection, so adding art never touches component code:
 
-1. Drop the image in `src/assets/art/` (a real photo, or an SVG placeholder).
+1. Drop the image in `src/assets/art/`.
 2. Add a JSON entry in `src/content/art/`, for example `new-work.json`:
 
    ```json
@@ -33,25 +60,29 @@ The gallery is a content collection, so adding art never touches component code:
      "status": "available",
      "prints": true,
      "printsFrom": 45,
-     "image": "../../assets/art/new-work.svg",
+     "image": "../../assets/art/new-work.jpg",
      "note": "One short, vivid line about the piece.",
      "x": 40,
      "y": 60,
-     "links": ["luna-moth"]
+     "links": ["luna"]
    }
    ```
 
 That is it. The work appears as a node in the constellation, joins the lines to the
-slugs listed in `links`, and shows up in the lightbox. The image renders through
-`astro:assets` with width, height, and alt text, so swapping the placeholder for a
-real photo is just changing `image`.
+slugs listed in `links`, shows up in the lightbox, and drifts through the art strip.
+The image renders through `astro:assets` with width, height, and alt text.
 
 Field notes:
 
+- `dimensions`, `year`, `price`, `status`, `prints`, and `printsFrom` are
+  optional. Price defaults to "Inquire"; do not invent sale details.
 - `status` is one of `available`, `sold`, or `prints-only`.
 - `x` and `y` are the constellation position as a percent (0 to 100).
 - `links` are the slugs (file names without `.json`) this work connects to.
 - The featured work is set by `FEATURED_SLUG` in `src/lib/art.ts`.
+- Commission and pet pieces that should stay out of the constellation (so the
+  gallery keeps its celestial thread) live as plain images in the art strip
+  (`ArtStrip.astro`) and the commissions cards (`Commissions.astro`).
 
 ## Contact form
 
@@ -70,9 +101,11 @@ See `public/og-image.README.txt`.
 
 - `src/layouts/Base.astro` head, fonts, meta, global styles
 - `src/styles/global.css` palette tokens, shared keyframes, reduced-motion path
-- `src/components/` Nav, Loader, FaeBee, Starfield, Constellation, Lightbox, Featured, About, Contact, Footer, Hero
+- `src/components/` Nav, Loader, FaeBee, Starfield, Constellation, Lightbox, Featured, ArtStrip, Commissions, About, Contact, Footer, Hero
 - `src/content/art/` the gallery, one JSON file per work
 - `src/lib/art.ts` shared gallery ordering and the featured slug
+- `src/lib/video-client.ts` shared play and pause policy for every video
+- `public/video/` web clips and posters extracted from the footage (see `ASSETS.md`)
 
 The interactive pieces (Starfield, FaeBee, Constellation, Lightbox) are client-side
 islands. Everything else is static HTML. Animation honors `prefers-reduced-motion`.

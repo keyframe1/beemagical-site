@@ -55,7 +55,7 @@ const bgStars = works.map((w) => ({ x: w.data.x, y: w.data.y }));
         </div>
         <figcaption class="lb-cap">
           <h3 class="lb-title">{w.data.title}</h3>
-          <p class="lb-sub">{w.data.medium} . {w.data.dimensions} . {w.data.year}</p>
+          <p class="lb-sub">{[w.data.medium, w.data.dimensions, w.data.year].filter(Boolean).join(' . ')}</p>
           <p class="lb-price">{priceLine(w.data)}</p>
           <p class="lb-note">{w.data.note}</p>
           <a class="btn lb-inquire" href="#contact" data-close>Inquire</a>

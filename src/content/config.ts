@@ -16,12 +16,13 @@ const art = defineCollection({
     z.object({
       title: z.string(),
       medium: z.string(),
-      dimensions: z.string(),
-      year: z.number(),
-      // Display string so it can read "$850" or "Prints only".
-      price: z.string(),
-      status: z.enum(['available', 'sold', 'prints-only']),
-      prints: z.boolean(),
+      // Optional: footage-extracted pieces do not always carry these.
+      dimensions: z.string().optional(),
+      year: z.number().optional(),
+      // Display string so it can read "$850" or "Inquire".
+      price: z.string().default('Inquire'),
+      status: z.enum(['available', 'sold', 'prints-only']).default('available'),
+      prints: z.boolean().default(false),
       printsFrom: z.number().optional(),
       image: image(),
       note: z.string(),

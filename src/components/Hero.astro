@@ -1,12 +1,39 @@
 ---
 /**
- * Hero.astro - the wordmark and the two calls to action. The wordmark
- * carries the tagline; no subhead. The bee is the persistent FaeBee island,
- * which lands here after the loader.
+ * Hero.astro - the wordmark and the two calls to action, over a faint
+ * celestial time-lapse pulled from Hannah's real footage (The Return).
+ * The video is decorative: muted, looped, blurred, screen-blended at low
+ * opacity so the starfield and wordmark always win. It only plays while
+ * on screen and the tab is visible, never under prefers-reduced-motion,
+ * and small screens get its poster still instead. The bee is the
+ * persistent FaeBee island, which lands here after the loader.
  */
 ---
 
 <header class="hero" id="top">
+  <div class="hero-video" aria-hidden="true">
+    <video
+      class="hero-clip"
+      muted
+      loop
+      playsinline
+      preload="metadata"
+      poster="/video/celestial-timelapse-poster.jpg"
+      data-autovideo
+    >
+      <source src="/video/celestial-timelapse.webm" type="video/webm" />
+      <source src="/video/celestial-timelapse.mp4" type="video/mp4" />
+    </video>
+    <img
+      class="hero-poster"
+      src="/video/celestial-timelapse-poster.jpg"
+      alt=""
+      width="580"
+      height="580"
+      loading="lazy"
+    />
+  </div>
+
   <div class="logo-stage">
     <img
       class="wordmark"
@@ -33,9 +60,43 @@
     text-align: center;
     padding: 30px 24px 24px;
     position: relative;
+    overflow: hidden;
   }
-  .logo-stage { position: relative; width: min(620px, 90vw); margin-bottom: var(--space-2); }
+
+  /* the time-lapse sits at the very back of the hero, under the wordmark
+     and the bee; screen blending lets the starfield glow through it */
+  .hero-video {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .hero-video video,
+  .hero-video img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.25;
+    filter: blur(4px) saturate(1.1);
+    mix-blend-mode: screen;
+  }
+  .hero-poster { display: none; }
+
+  .logo-stage { position: relative; z-index: 1; width: min(620px, 90vw); margin-bottom: var(--space-2); }
   .wordmark { width: 100%; height: auto; display: block; filter: drop-shadow(0 0 30px rgba(217, 70, 239, 0.35)); }
 
-  .cta { margin-top: var(--space-4); display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .cta { position: relative; z-index: 1; margin-top: var(--space-4); display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+  /* small screens swap the video for its poster still */
+  @media (max-width: 640px) {
+    .hero-clip { display: none; }
+    .hero-poster { display: block; }
+  }
 </style>
+
+<script>
+  import { manageVideo } from '../lib/video-client';
+  const clip = document.querySelector('.hero-clip') as HTMLVideoElement | null;
+  // the hero clip is ambient: in view + tab visible -> play, otherwise pause
+  if (clip) manageVideo(clip, { group: 'ambient' });
+</script>

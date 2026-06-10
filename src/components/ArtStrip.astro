@@ -1,0 +1,155 @@
+---
+/**
+ * ArtStrip.astro - a slow, continuous marquee of every real artwork pulled
+ * from the footage, drifting between sections. Gallery pieces open in the
+ * Lightbox at their index; commission examples (pets, portraits, sketches)
+ * link down to the commissions section. Pause on hover. On small screens
+ * it becomes a plain swipeable row. Reduced motion freezes the drift and
+ * the row stays scrollable.
+ */
+import { Image } from 'astro:assets';
+import { getArt } from '../lib/art';
+
+import amethystGirl from '../assets/art/amethyst-girl.jpg';
+import blackCat from '../assets/art/black-cat.jpg';
+import boxerDog from '../assets/art/boxer-dog.jpg';
+import fluffyCat from '../assets/art/fluffy-cat.jpg';
+import poodle from '../assets/art/poodle.jpg';
+import redheadGirl from '../assets/art/redhead-girl.jpg';
+import rottweiler from '../assets/art/rottweiler.jpg';
+import sketchGirl from '../assets/art/sketch-girl.jpg';
+
+const works = await getArt();
+const indexOf = new Map(works.map((w, i) => [w.id, i]));
+
+// Commission and study pieces that live outside the constellation but still
+// deserve a place in the parade.
+const extras = [
+  { image: amethystGirl, alt: 'Portrait of a girl with violet and green hair' },
+  { image: rottweiler, alt: 'Pet portrait of a rottweiler' },
+  { image: redheadGirl, alt: 'Portrait of a red-haired girl with braids' },
+  { image: fluffyCat, alt: 'Pet portrait of a fluffy white cat' },
+  { image: sketchGirl, alt: 'Expressive sketch of a girl with rainbow hair' },
+  { image: boxerDog, alt: 'Pet portrait of a boxer dog' },
+  { image: blackCat, alt: 'Pet portrait of a black cat with golden eyes' },
+  { image: poodle, alt: 'Pet portrait of a white poodle' },
+];
+
+// Interleave gallery works and extras so the strip mixes skies, fae, pets,
+// and portraits instead of clumping.
+type StripItem = { image: ImageMetadata; alt: string; index?: number };
+const galleryItems: StripItem[] = works.map((w) => ({
+  image: w.data.image,
+  alt: `${w.data.title}. ${w.data.medium}`,
+  index: indexOf.get(w.id),
+}));
+const items: StripItem[] = [];
+const longer = galleryItems.length >= extras.length ? galleryItems : extras;
+const shorter = longer === galleryItems ? extras : galleryItems;
+for (let i = 0; i < longer.length; i++) {
+  items.push(longer[i]);
+  if (i < shorter.length) items.push(shorter[i]);
+}
+---
+
+<aside class="strip" aria-label="A drifting row of artworks">
+  <div class="strip-track">
+    {[0, 1].map((copy) => (
+      <div class="strip-half" aria-hidden={copy === 1 ? 'true' : undefined}>
+        {items.map((it) =>
+          it.index !== undefined ? (
+            <button
+              class="strip-item"
+              type="button"
+              data-index={it.index}
+              aria-label={`Open ${it.alt} in the viewer`}
+              tabindex={copy === 1 ? -1 : undefined}
+            >
+              <Image src={it.image} alt={copy === 0 ? it.alt : ''} height={150} loading="lazy" />
+            </button>
+          ) : (
+            <a
+              class="strip-item"
+              href="#commissions"
+              aria-label={`${it.alt}. See commissions`}
+              tabindex={copy === 1 ? -1 : undefined}
+            >
+              <Image src={it.image} alt={copy === 0 ? it.alt : ''} height={150} loading="lazy" />
+            </a>
+          )
+        )}
+      </div>
+    ))}
+  </div>
+</aside>
+
+<style>
+  .strip {
+    position: relative;
+    overflow: hidden;
+    padding: var(--space-3) 0;
+    /* soft fade at both edges so works drift in from nothing */
+    mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+  }
+
+  .strip-track {
+    display: flex;
+    width: max-content;
+    animation: stripdrift 75s linear infinite;
+  }
+  .strip:hover .strip-track { animation-play-state: paused; }
+
+  .strip-half { display: flex; gap: 18px; padding-right: 18px; }
+
+  .strip-item {
+    display: block;
+    flex: none;
+    padding: 0;
+    border: 1px solid rgba(74, 234, 255, 0.22);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: #05071a;
+    cursor: pointer;
+    box-shadow: var(--shadow-card);
+    transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+  }
+  .strip-item:hover {
+    transform: translateY(-4px);
+    border-color: rgba(74, 234, 255, 0.6);
+    box-shadow: var(--glow-cyan-strong), var(--shadow-card);
+  }
+  .strip-item :global(img) { height: 150px; width: auto; display: block; }
+
+  @keyframes stripdrift {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* small screens: a plain swipeable row, no drift */
+  @media (max-width: 640px) {
+    .strip { overflow-x: auto; -webkit-overflow-scrolling: touch; mask-image: none; }
+    .strip-track { animation: none; }
+    .strip-item :global(img) { height: 110px; }
+  }
+
+  /* reduced motion: global.css already stops the animation; keep the row
+     reachable by letting it scroll sideways */
+  @media (prefers-reduced-motion: reduce) {
+    .strip { overflow-x: auto; mask-image: none; }
+  }
+</style>
+
+<script>
+  // gallery items open the lightbox at their index, like constellation nodes
+  const strip = document.querySelector('.strip');
+  strip?.addEventListener('click', (ev) => {
+    const btn = (ev.target as HTMLElement).closest('button.strip-item') as HTMLElement | null;
+    if (!btn) return;
+    const r = btn.getBoundingClientRect();
+    window.dispatchEvent(
+      new CustomEvent('lightbox:open', {
+        detail: { index: Number(btn.dataset.index), originX: r.left + r.width / 2, originY: r.top + r.height / 2 },
+      })
+    );
+  });
+</script>

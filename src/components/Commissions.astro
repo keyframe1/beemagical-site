@@ -1,0 +1,169 @@
+---
+/**
+ * Commissions.astro - skill and process examples, not listings. Two real
+ * portrait time-lapses from the footage play inside star-framed cards on
+ * hover or when scrolled into view (one at a time), and two pet portraits
+ * stand as stills. Captions name only the piece type. One button leads to
+ * the contact section. No prices anywhere.
+ */
+import { Image } from 'astro:assets';
+import fluffyCat from '../assets/art/fluffy-cat.jpg';
+import rottweiler from '../assets/art/rottweiler.jpg';
+
+const clips = [
+  {
+    src: '/video/portrait-timelapse-a',
+    poster: '/video/portrait-timelapse-a-poster.jpg',
+    caption: 'Portrait commission',
+    note: 'Painted from your photo',
+  },
+  {
+    src: '/video/portrait-timelapse-b',
+    poster: '/video/portrait-timelapse-b-poster.jpg',
+    caption: 'Portrait commission',
+    note: 'Watch it come together',
+  },
+];
+const stills = [
+  { image: rottweiler, caption: 'Pet portrait', note: 'Dogs, painted with love', alt: 'Painted pet portrait of a rottweiler' },
+  { image: fluffyCat, caption: 'Pet portrait', note: 'Cats sit still for once', alt: 'Painted pet portrait of a fluffy white cat' },
+];
+---
+
+<section id="commissions" class="section">
+  <div class="reveal">
+    <h2 class="section-title">Commissions</h2>
+    <p class="section-desc">Portraits, pets, and custom pieces. Tell me what you have in mind.</p>
+  </div>
+
+  <div class="com-grid reveal">
+    {clips.map((c) => (
+      <figure class="com-card">
+        <div class="com-frame">
+          <span class="com-star tl" aria-hidden="true"></span>
+          <span class="com-star br" aria-hidden="true"></span>
+          <video
+            muted
+            loop
+            playsinline
+            preload="metadata"
+            poster={c.poster}
+            aria-hidden="true"
+            data-autovideo
+          >
+            <source src={`${c.src}.webm`} type="video/webm" />
+            <source src={`${c.src}.mp4`} type="video/mp4" />
+          </video>
+        </div>
+        <figcaption class="com-cap">
+          <span class="com-type">{c.caption}</span>
+          <span class="com-note">{c.note}</span>
+        </figcaption>
+      </figure>
+    ))}
+    {stills.map((s) => (
+      <figure class="com-card">
+        <div class="com-frame">
+          <span class="com-star tl" aria-hidden="true"></span>
+          <span class="com-star br" aria-hidden="true"></span>
+          <Image src={s.image} alt={s.alt} height={520} loading="lazy" />
+        </div>
+        <figcaption class="com-cap">
+          <span class="com-type">{s.caption}</span>
+          <span class="com-note">{s.note}</span>
+        </figcaption>
+      </figure>
+    ))}
+  </div>
+
+  <div class="com-cta reveal">
+    <a class="btn" href="#contact">Start a commission</a>
+  </div>
+</section>
+
+<style>
+  .com-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+    align-items: start;
+  }
+
+  .com-card { margin: 0; }
+
+  /* star-framed panel: thin glowing border with two corner stars */
+  .com-frame {
+    position: relative;
+    border: 1px solid rgba(74, 234, 255, 0.3);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: #05071a;
+    box-shadow: var(--glow-cyan), var(--shadow-card);
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+  }
+  .com-card:hover .com-frame {
+    transform: translateY(-4px);
+    box-shadow: var(--glow-magenta), 0 22px 50px rgba(0, 0, 0, 0.6);
+  }
+  .com-frame video,
+  .com-frame :global(img) {
+    width: 100%;
+    aspect-ratio: 580 / 860;
+    height: auto;
+    object-fit: cover;
+    display: block;
+  }
+
+  .com-star {
+    position: absolute;
+    z-index: 1;
+    width: 10px;
+    height: 10px;
+    background: radial-gradient(circle, #fff 0%, rgba(74, 234, 255, 0.9) 35%, transparent 70%);
+    pointer-events: none;
+    animation: tw 3.2s ease-in-out infinite;
+  }
+  .com-star.tl { top: 8px; left: 8px; }
+  .com-star.br { bottom: 8px; right: 8px; animation-delay: 1.4s; }
+
+  .com-cap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 4px 0;
+    text-align: center;
+  }
+  .com-type {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    color: var(--moon);
+  }
+  .com-note {
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: rgba(226, 232, 244, 0.55);
+  }
+
+  .com-cta { margin-top: var(--space-4); text-align: center; }
+
+  @media (max-width: 900px) {
+    .com-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 480px) {
+    .com-grid { grid-template-columns: 1fr; max-width: 340px; margin-left: auto; margin-right: auto; }
+  }
+</style>
+
+<script>
+  import { manageVideo } from '../lib/video-client';
+  for (const v of Array.from(
+    document.querySelectorAll('#commissions video[data-autovideo]')
+  ) as HTMLVideoElement[]) {
+    manageVideo(v, { group: 'cards' });
+  }
+</script>

@@ -11,4 +11,4 @@ export async function getArt(): Promise<Art[]> {
   return all.sort((a, b) => a.id.localeCompare(b.id));
 }
 
-export const FEATURED_SLUG = 'hummingbird-trumpet-vine';
+export const FEATURED_SLUG = 'luna';

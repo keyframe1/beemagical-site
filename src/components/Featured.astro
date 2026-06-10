@@ -12,6 +12,7 @@ const works = await getArt();
 const index = works.findIndex((w) => w.id === FEATURED_SLUG);
 const work = works[index];
 const d = work.data;
+const subLine = [d.medium, d.dimensions, d.year].filter(Boolean).join(' . ');
 ---
 
 <section id="featured" class="section">
@@ -34,7 +35,7 @@ const d = work.data;
     </div>
 
     <div class="feat-body">
-      <p class="feat-sub">{d.medium} . {d.dimensions} . {d.year}</p>
+      <p class="feat-sub">{subLine}</p>
       <p class="feat-note">{d.note}</p>
       <p class="feat-price">{d.price}{d.prints && d.printsFrom ? ` . Prints from $${d.printsFrom}` : ''}</p>
       <div class="cta">

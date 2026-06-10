@@ -7,6 +7,8 @@ import Nav from '../components/Nav.astro';
 import Hero from '../components/Hero.astro';
 import Constellation from '../components/Constellation.astro';
 import Featured from '../components/Featured.astro';
+import ArtStrip from '../components/ArtStrip.astro';
+import Commissions from '../components/Commissions.astro';
 import About from '../components/About.astro';
 import Contact from '../components/Contact.astro';
 import Footer from '../components/Footer.astro';
@@ -34,8 +36,8 @@ const jsonLd = {
       name: w.data.title,
       artMedium: w.data.medium,
       artform: 'Painting',
-      size: w.data.dimensions,
-      dateCreated: String(w.data.year),
+      ...(w.data.dimensions ? { size: w.data.dimensions } : {}),
+      ...(w.data.year ? { dateCreated: String(w.data.year) } : {}),
       description: w.data.note,
       image: new URL(w.data.image.src, site).href,
       creator: { '@id': artist['@id'] },
@@ -58,6 +60,8 @@ const jsonLd = {
     <div class="div"><span class="ln"></span><span class="d"></span><span class="ln"></span></div>
     <Constellation />
     <Featured />
+    <ArtStrip />
+    <Commissions />
     <About />
     <Contact />
   </main>
