@@ -57,8 +57,6 @@ known.
 | --- | --- | --- |
 | bee-moon.jpg | Bee Magical neon bee emblem | Gallery |
 | luna.jpg | Luna, moon-crowned face in storm clouds | Gallery (featured) |
-| moon-clouds.jpg | Crescent moon in storm clouds | Gallery |
-| rocket-girl.jpg | Rocket Girl digital piece, 2022 | Gallery |
 | amethyst-girl.jpg | Purple and green hair portrait | Art strip |
 | redhead-girl.jpg | Red-haired girl with braids | Art strip |
 | sketch-girl.jpg | Expressive rainbow-hair sketch | Art strip |

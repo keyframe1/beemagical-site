@@ -6,5 +6,5 @@
   "image": "../../assets/art/selkie.png",
   "x": 17,
   "y": 50,
-  "links": ["moon-clouds", "the-arrival"]
+  "links": ["the-arrival"]
 }
