@@ -15,8 +15,14 @@ const {
   description = 'Space and aurora paintings, plus portrait and pet commissions. By Bee Magical, made in Louisiana.',
 } = Astro.props;
 
-const ogImage = new URL('/og-image.jpg', Astro.site).href;
+const ogImage = new URL('/og.jpg', Astro.site).href;
 const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : Astro.url.pathname;
+
+// Share-card copy. The page <title>/description stay long for SEO, but the
+// social card leads with the brand name and the tagline so previews read clean.
+const ogTitle = 'Bee Magical';
+const ogDescription = 'Space and aurora paintings, plus portrait and pet commissions.';
+const ogAlt = 'Ultraviolet, a cosmic self-portrait by Bee Magical, set in a starfield.';
 ---
 
 <!doctype html>
@@ -34,18 +40,23 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : As
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
+    <meta property="og:site_name" content="Bee Magical" />
+    <meta property="og:title" content={ogTitle} />
+    <meta property="og:description" content={ogDescription} />
+    <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
+    <meta property="og:image:secure_url" content={ogImage} />
+    <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:site_name" content="Bee Magical" />
+    <meta property="og:image:alt" content={ogAlt} />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={title} />
-    <meta name="twitter:description" content={description} />
+    <meta name="twitter:title" content={ogTitle} />
+    <meta name="twitter:description" content={ogDescription} />
     <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={ogAlt} />
 
     <!-- Fonts: Macondo Swash Caps (headings) + Tsukimi Rounded (everything else) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

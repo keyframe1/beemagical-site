@@ -218,6 +218,12 @@ html.js .reveal.in { opacity: 1; transform: none; }
 /* constellation line pulse: a dash of light travels the hovered lines */
 @keyframes linepulse { from { stroke-dashoffset: 1; } to { stroke-dashoffset: -1; } }
 
+/* starfield: a gentle, occasional single-star twinkle (opacity only) */
+@keyframes sftw { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+.sf-tw { animation: sftw 4.5s ease-in-out infinite; }
+.sf-tw:nth-of-type(2n) { animation-duration: 6s; animation-delay: -2s; }
+.sf-tw:nth-of-type(3n) { animation-duration: 5.2s; animation-delay: -3.5s; }
+
 /* ============================================================
    tab hidden: the Starfield island toggles html.tab-hidden on
    visibilitychange so every decorative CSS loop pauses too.
@@ -231,7 +237,8 @@ html.tab-hidden .bee-wings,
 html.tab-hidden .strip-track,
 html.tab-hidden .gx-neb,
 html.tab-hidden .gx-comet,
-html.tab-hidden .gx-comet-head {
+html.tab-hidden .gx-comet-head,
+html.tab-hidden .sf-tw {
   animation-play-state: paused !important;
 }
 

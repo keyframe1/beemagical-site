@@ -21,6 +21,7 @@
  */
 import { Image } from 'astro:assets';
 import { getArt, FEATURED_SLUG } from '../lib/art';
+import { starfield } from '../lib/starfield';
 
 const works = await getArt();
 // Global gallery index: the Lightbox maps over getArt() in this same order,
@@ -56,9 +57,18 @@ function buildLines(subset: Work[]): Line[] {
 const digital = works.filter((w) => isDigital(w.data.medium));
 const acrylic = works.filter((w) => !isDigital(w.data.medium));
 
+// A premium static star field sits behind each galaxy's nodes: depth layers of
+// stars over a faint nebula wash, so the chart reads as a real patch of sky
+// rather than a flat panel. Distinct seeds keep the two skies from matching.
 const galaxies = [
-  { key: 'digital', label: 'Digital', flourish: 'bee', works: digital, lines: buildLines(digital) },
-  { key: 'acrylic', label: 'Acrylic', flourish: 'star', works: acrylic, lines: buildLines(acrylic) },
+  {
+    key: 'digital', label: 'Digital', flourish: 'bee', works: digital, lines: buildLines(digital),
+    sky: starfield({ w: 900, h: 600, seed: 3271, bg: 90, fg: 16, id: 'cdig', class: 'c-sky' }),
+  },
+  {
+    key: 'acrylic', label: 'Acrylic', flourish: 'star', works: acrylic, lines: buildLines(acrylic),
+    sky: starfield({ w: 900, h: 600, seed: 6824, bg: 90, fg: 16, id: 'cacr', class: 'c-sky' }),
+  },
 ];
 ---
 
@@ -88,6 +98,7 @@ const galaxies = [
         </h3>
 
         <div class="constellation reveal" role="group" aria-label={`${g.label} constellation`}>
+          <div class="c-skywrap" aria-hidden="true" set:html={g.sky}></div>
           <svg class="lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             {g.lines.map((l) => (
               <line class="base" x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} pathLength="1" data-a={l.a} data-b={l.b} />
@@ -187,6 +198,10 @@ const galaxies = [
     background: radial-gradient(ellipse 70% 60% at 50% 45%, rgba(233, 196, 106, 0.05), transparent 70%);
   }
 
+  /* the static premium sky behind the nodes (depth stars + nebula wash) */
+  .c-skywrap { position: absolute; inset: 0; pointer-events: none; overflow: hidden; border-radius: var(--radius-lg); }
+  .c-skywrap :global(.c-sky) { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.85; }
+
   .lines {
     position: absolute;
     inset: 0;
@@ -194,13 +209,15 @@ const galaxies = [
     height: 100%;
     overflow: visible;
   }
+  /* the functional links between related works: kept thin and low opacity so
+     they read as a gentle map, not a hard network graph */
   .lines line.base {
-    stroke: rgba(74, 234, 255, 0.45);
-    stroke-width: 1px;
+    stroke: rgba(74, 234, 255, 0.3);
+    stroke-width: 0.75px;
     vector-effect: non-scaling-stroke;
     stroke-dasharray: 1;
     stroke-dashoffset: 1;
-    filter: drop-shadow(0 0 3px rgba(74, 234, 255, 0.5));
+    filter: drop-shadow(0 0 2px rgba(74, 234, 255, 0.4));
     transition: stroke 0.3s ease, opacity 0.3s ease;
   }
   .constellation.drawn .lines line.base {

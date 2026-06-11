@@ -1,79 +1,92 @@
 ---
 /**
- * Lightbox.astro - full image view with prev/next and keyboard support.
- * Renders every work as a stacked astro:assets <Image> (width, height, alt)
- * and crossfades between them on prev/next. Opens with a scale-and-fade
- * from the clicked node (the opener passes its origin point), over a faint
- * constellation backdrop. Opened by the 'lightbox:open' event the
- * Constellation and Featured dispatch. Maps over the collection, so new art
- * appears here automatically. Esc closes; arrow keys move.
+ * Lightbox.astro - a study viewer for the gallery.
+ *
+ * The point of the lightbox is to study a piece, so the artwork is the
+ * dominant element: it fits the viewport (up to ~90vh / 90vw), complete and
+ * uncropped, centered, and it can be zoomed and panned.
+ *
+ *  - The largest source is loaded only when the viewer opens (lazy) and the
+ *    <img> is released on close, so the page never preloads full-resolution
+ *    art. Digital pieces load their full-resolution original (past any gallery
+ *    width cap) so zooming reveals real brush detail; physical pieces load the
+ *    largest variant available. Both are produced here at build time.
+ *  - Desktop: wheel zooms toward the cursor, drag pans when zoomed, double
+ *    click toggles fit and a closer look. Touch: pinch, drag, double tap.
+ *    Pan is constrained to the image bounds; zoom and position reset on close
+ *    and whenever a new piece opens.
+ *  - Metadata sits in a slim caption below the art (title, medium, short
+ *    description, a Sold pill when applicable) with a single Inquire call to
+ *    action, so it never shrinks the art.
+ *  - Esc and a visible close control both close it; focus is trapped while
+ *    open and page scroll is locked. A dark scrim plus a blur of the gallery
+ *    sits behind, over a faint static star field, so the constellation never
+ *    cuts across the artwork or text.
+ *
+ * Maps over the collection, so new art appears here automatically. Opened by
+ * the 'lightbox:open' event the Constellation and Featured dispatch.
  */
-import { Image } from 'astro:assets';
+import { getImage } from 'astro:assets';
 import { getArt } from '../lib/art';
+import { starfield } from '../lib/starfield';
 
 const works = await getArt();
 
 // Sold and prints-only pieces stay in the gallery as portfolio examples; a
-// quiet status badge near the title marks them unavailable and the buy line
-// is dropped. The price line is reserved for pieces that are still available
-// (or that have a stated prints option).
+// quiet status pill near the title marks the original unavailable.
 function badgeFor(d: (typeof works)[number]['data']): string | null {
   if (d.status === 'sold') return 'Sold';
   if (d.status === 'prints-only') return 'Original sold';
   return null;
 }
-function printsLine(d: (typeof works)[number]['data']): string | null {
-  if (d.prints && d.printsFrom) return `Prints from $${d.printsFrom}`;
-  return null;
-}
 
-// a faint constellation behind the viewer, echoing the gallery chart
-const bgStars = works.map((w) => ({ x: w.data.x, y: w.data.y }));
+// Build the largest source per piece at build time (full native width, encoded
+// to webp). getArt() ordering is shared with the Constellation, so indices
+// agree for prev/next.
+const items = await Promise.all(
+  works.map(async (w) => {
+    const d = w.data;
+    const full = await getImage({ src: d.image, width: d.image.width, format: 'webp', quality: 90 });
+    return {
+      title: d.title,
+      sub: [d.medium, d.dimensions, d.year].filter(Boolean).join(' . '),
+      note: d.note,
+      badge: badgeFor(d),
+      src: full.src,
+      alt: `${d.title}. ${d.note}`,
+    };
+  })
+);
+
+// a faint premium star field behind the viewer, echoing the gallery sky
+const sky = starfield({ w: 1280, h: 720, seed: 9157, bg: 110, fg: 20, id: 'lbsky', opacity: 0.85, class: 'lb-sky' });
 ---
 
 <div id="lightbox" class="lb" role="dialog" aria-modal="true" aria-label="Artwork viewer" hidden>
-  <svg class="lb-sky" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-    {bgStars.map((s, i) => (
-      <>
-        {i > 0 && <line x1={bgStars[i - 1].x} y1={bgStars[i - 1].y} x2={s.x} y2={s.y} />}
-        <circle cx={s.x} cy={s.y} r="0.45" />
-      </>
-    ))}
-  </svg>
+  <div class="lb-backdrop" aria-hidden="true" set:html={sky} />
 
   <button class="lb-close" type="button" aria-label="Close viewer">&times;</button>
   <button class="lb-nav lb-prev" type="button" aria-label="Previous work">&#8249;</button>
   <button class="lb-nav lb-next" type="button" aria-label="Next work">&#8250;</button>
 
-  <div class="lb-stage">
-    {works.map((w, i) => (
-      <figure class:list={['lb-figure', { sold: badgeFor(w.data) !== null }]} data-index={i}>
-        <div class="lb-imgwrap">
-          <Image
-            src={w.data.image}
-            alt={`${w.data.title}. ${w.data.note}`}
-            width={Math.min(w.data.image.width, 2400)}
-            height={Math.round(w.data.image.height * (Math.min(w.data.image.width, 2400) / w.data.image.width))}
-            quality={88}
-            format="webp"
-            loading="lazy"
-            class="lb-img"
-          />
-        </div>
-        <figcaption class="lb-cap">
-          <div class="lb-titlerow">
-            <h3 class="lb-title">{w.data.title}</h3>
-            {badgeFor(w.data) && <span class="lb-badge">{badgeFor(w.data)}</span>}
-          </div>
-          <p class="lb-sub">{[w.data.medium, w.data.dimensions, w.data.year].filter(Boolean).join(' . ')}</p>
-          {badgeFor(w.data) === null && <p class="lb-price">{w.data.price}</p>}
-          {printsLine(w.data) && <p class="lb-price">{printsLine(w.data)}</p>}
-          <p class="lb-note">{w.data.note}</p>
-          <a class="btn lb-inquire" href="#contact" data-close>Inquire</a>
-        </figcaption>
-      </figure>
-    ))}
+  <div class="lb-stage" id="lb-stage">
+    <img class="lb-img" id="lb-img" alt="" draggable="false" />
+    <div class="lb-spinner" aria-hidden="true"></div>
   </div>
+
+  <figcaption class="lb-caption">
+    <div class="lb-meta">
+      <div class="lb-titlerow">
+        <h3 class="lb-title"></h3>
+        <span class="lb-badge" hidden></span>
+      </div>
+      <p class="lb-sub"></p>
+      <p class="lb-note"></p>
+    </div>
+    <a class="btn lb-inquire" href="#contact" data-close>Inquire</a>
+  </figcaption>
+
+  <script type="application/json" id="lb-data" set:html={JSON.stringify(items)} is:inline />
 </div>
 
 <style>
@@ -82,78 +95,117 @@ const bgStars = works.map((w) => ({ x: w.data.x, y: w.data.y }));
     inset: 0;
     z-index: 80;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 5vh 6vw;
-    background: rgba(2, 3, 10, 0.92);
-    backdrop-filter: blur(8px);
+    flex-direction: column;
   }
   .lb[hidden] { display: none; }
 
-  .lb-sky {
+  /* dark scrim + a blur of the gallery behind, over a faint static sky, so the
+     constellation never reads through onto the artwork or text */
+  .lb-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: rgba(2, 3, 10, 0.9);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  .lb-backdrop :global(.lb-sky) {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-    opacity: 0.16;
-    pointer-events: none;
+    opacity: 0.5;
   }
-  .lb-sky line { stroke: var(--cyan); stroke-width: 0.5px; vector-effect: non-scaling-stroke; }
-  .lb-sky circle { fill: var(--moon); }
 
+  /* the stage: the zoom/pan viewport. The image is the dominant element. */
   .lb-stage {
-    width: min(1000px, 100%);
-    max-height: 90vh;
-    display: grid;
-    will-change: transform, opacity;
-  }
-  .lb-figure {
-    grid-area: 1 / 1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 32px;
-    align-items: center;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.35s ease, visibility 0.35s;
-  }
-  .lb-figure.active { opacity: 1; visibility: visible; }
-
-  .lb-imgwrap {
-    border-radius: var(--radius-md);
+    position: relative;
+    z-index: 1;
+    flex: 1 1 auto;
+    min-height: 0;
     overflow: hidden;
-    border: 1px solid rgba(74, 234, 255, 0.3);
-    box-shadow: 0 0 38px rgba(74, 234, 255, 0.18), var(--shadow-deep);
-    background: #05071a;
+    touch-action: none;
+    cursor: zoom-in;
   }
-  .lb-img { width: 100%; height: auto; max-height: 80vh; object-fit: contain; display: block; }
+  .lb-stage.zoomed { cursor: grab; }
+  .lb-stage.panning { cursor: grabbing; }
 
-  .lb-cap { text-align: left; }
-  .lb-titlerow { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; }
-  .lb-title { font-family: var(--font-head); font-size: clamp(28px, 4vw, 44px); color: var(--moon); line-height: 1.1; }
-  /* a quiet celestial status pill for sold and prints-only pieces */
+  .lb-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: 0 0;
+    max-width: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    will-change: transform;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .lb-stage.loaded .lb-img { opacity: 1; }
+
+  .lb-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 42px;
+    height: 42px;
+    margin: -21px 0 0 -21px;
+    border: 2px solid rgba(74, 234, 255, 0.25);
+    border-top-color: var(--cyan);
+    border-radius: 50%;
+    animation: lbspin 0.8s linear infinite;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .lb.loading .lb-spinner { opacity: 1; }
+  @keyframes lbspin { to { transform: rotate(360deg); } }
+
+  /* slim caption, understated, so it never shrinks the art */
+  .lb-caption {
+    position: relative;
+    z-index: 2;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    padding: 14px clamp(18px, 4vw, 40px) calc(14px + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(to top, rgba(2, 3, 10, 0.94), rgba(2, 3, 10, 0.45));
+    border-top: 1px solid rgba(74, 234, 255, 0.12);
+  }
+  .lb-meta { min-width: 0; }
+  .lb-titlerow { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+  .lb-title { font-family: var(--font-head); font-size: clamp(22px, 3vw, 32px); color: var(--moon); line-height: 1.1; }
   .lb-badge {
     font-family: var(--font-body);
     font-weight: 500;
-    font-size: 11px;
+    font-size: 10px;
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--moon);
     background: rgba(217, 70, 239, 0.18);
     border: 1px solid rgba(217, 70, 239, 0.55);
     border-radius: var(--radius-pill);
-    padding: 4px 13px;
-    box-shadow: 0 0 16px rgba(217, 70, 239, 0.3);
+    padding: 3px 11px;
+    box-shadow: 0 0 14px rgba(217, 70, 239, 0.28);
     white-space: nowrap;
   }
-  .lb-sub { font-family: var(--font-body); font-weight: 300; font-size: 13px; letter-spacing: 0.06em; color: rgba(226, 232, 244, 0.55); margin-top: 10px; }
-  .lb-price { font-family: var(--font-body); font-weight: 500; font-size: 15px; color: var(--cyan); margin-top: 8px; }
-  .lb-note { font-family: var(--font-body); font-weight: 300; font-size: 16px; color: rgba(226, 232, 244, 0.82); margin-top: 16px; }
-  .lb-inquire { margin-top: 22px; }
+  .lb-badge[hidden] { display: none; }
+  .lb-sub { font-family: var(--font-body); font-weight: 300; font-size: 12px; letter-spacing: 0.06em; color: rgba(226, 232, 244, 0.55); margin-top: 6px; }
+  .lb-note {
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 14px;
+    color: rgba(226, 232, 244, 0.82);
+    margin-top: 6px;
+    max-width: 62ch;
+  }
+  .lb-inquire { flex: 0 0 auto; }
 
   .lb-close, .lb-nav {
     position: absolute;
-    z-index: 2;
+    z-index: 3;
     background: rgba(74, 234, 255, 0.07);
     border: 1px solid rgba(74, 234, 255, 0.35);
     color: var(--moon);
@@ -162,91 +214,245 @@ const bgStars = works.map((w) => ({ x: w.data.x, y: w.data.y }));
     transition: background 0.25s ease, box-shadow 0.25s ease;
   }
   .lb-close:hover, .lb-nav:hover { background: rgba(74, 234, 255, 0.2); box-shadow: 0 0 20px rgba(74, 234, 255, 0.35); }
-  .lb-close { top: 22px; right: 24px; width: 46px; height: 46px; font-size: 26px; line-height: 1; }
-  .lb-nav { top: 50%; transform: translateY(-50%); width: 52px; height: 52px; font-size: 30px; line-height: 1; }
-  .lb-prev { left: 18px; }
-  .lb-next { right: 18px; }
+  .lb-close { top: 20px; right: 22px; width: 46px; height: 46px; font-size: 26px; line-height: 1; }
+  .lb-nav { top: 50%; transform: translateY(-50%); width: 50px; height: 50px; font-size: 30px; line-height: 1; }
+  .lb-prev { left: 16px; }
+  .lb-next { right: 16px; }
 
   @media (max-width: 760px) {
-    .lb-figure { grid-template-columns: 1fr; gap: 16px; max-height: 86vh; overflow-y: auto; }
-    .lb-figure.active { overflow-y: auto; }
-    .lb-img { max-height: 52vh; }
-    .lb-nav { top: auto; bottom: 18px; transform: none; }
+    .lb-caption { flex-direction: column; align-items: flex-start; gap: 12px; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+    .lb-note { display: none; } /* keep the bar slim on small screens */
+    .lb-nav { top: auto; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); transform: none; }
+    .lb-close { top: 14px; right: 14px; }
   }
 </style>
 
 <script>
-  const lb = document.getElementById('lightbox');
+  const lb = document.getElementById('lightbox') as HTMLElement | null;
   if (lb) {
+    type Item = { title: string; sub: string; note: string; badge: string | null; src: string; alt: string };
+    const data: Item[] = JSON.parse(document.getElementById('lb-data')!.textContent || '[]');
+
     const stage = lb.querySelector('.lb-stage') as HTMLElement;
-    const figures = Array.from(lb.querySelectorAll('.lb-figure')) as HTMLElement[];
+    const img = lb.querySelector('.lb-img') as HTMLImageElement;
     const closeBtn = lb.querySelector('.lb-close') as HTMLButtonElement;
     const prevBtn = lb.querySelector('.lb-prev') as HTMLButtonElement;
     const nextBtn = lb.querySelector('.lb-next') as HTMLButtonElement;
+    const titleEl = lb.querySelector('.lb-title') as HTMLElement;
+    const badgeEl = lb.querySelector('.lb-badge') as HTMLElement;
+    const subEl = lb.querySelector('.lb-sub') as HTMLElement;
+    const noteEl = lb.querySelector('.lb-note') as HTMLElement;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     let current = 0;
     let lastFocus: HTMLElement | null = null;
+    let loaded = false;
+
+    // transform state (image natural px -> stage px via translate + scale)
+    let natW = 0, natH = 0, fit = 1, minS = 1, maxS = 1, scale = 1, tx = 0, ty = 0;
+
+    function clampPan() {
+      const sw = stage.clientWidth, sh = stage.clientHeight;
+      const iw = natW * scale, ih = natH * scale;
+      tx = iw <= sw ? (sw - iw) / 2 : Math.min(0, Math.max(sw - iw, tx));
+      ty = ih <= sh ? (sh - ih) / 2 : Math.min(0, Math.max(sh - ih, ty));
+    }
+    function apply() {
+      clampPan();
+      img.style.transform = `translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px) scale(${scale.toFixed(4)})`;
+      stage.classList.toggle('zoomed', scale > fit + 1e-3);
+    }
+    function fitView() {
+      const sw = stage.clientWidth, sh = stage.clientHeight;
+      if (!natW || !natH) return;
+      fit = Math.min(sw / natW, sh / natH);
+      minS = fit;
+      maxS = Math.max(fit * 4, 1); // at least native 1:1 for real detail
+      scale = fit;
+      tx = (sw - natW * scale) / 2;
+      ty = (sh - natH * scale) / 2;
+      apply();
+    }
+    function zoomTo(px: number, py: number, ns: number) {
+      ns = Math.min(maxS, Math.max(minS, ns));
+      if (Math.abs(ns - scale) < 1e-4) return;
+      const ix = (px - tx) / scale, iy = (py - ty) / scale;
+      scale = ns;
+      tx = px - ix * scale;
+      ty = py - iy * scale;
+      apply();
+    }
+
+    function setCaption(d: Item) {
+      titleEl.textContent = d.title;
+      if (d.badge) { badgeEl.textContent = d.badge; badgeEl.hidden = false; }
+      else { badgeEl.hidden = true; }
+      subEl.textContent = d.sub;
+      noteEl.textContent = d.note;
+    }
 
     function show(i: number) {
-      current = (i + figures.length) % figures.length;
-      // crossfade: the stacked figures share a grid cell, CSS transitions
-      figures.forEach((f, idx) => f.classList.toggle('active', idx === current));
+      current = (i + data.length) % data.length;
+      const d = data[current];
+      setCaption(d);
+      // reset and load the largest source lazily for this piece
+      loaded = false;
+      natW = natH = 0;
+      stage.classList.remove('loaded');
+      lb!.classList.add('loading');
+      img.style.transform = 'translate(0,0) scale(1)';
+      img.alt = d.alt;
+      img.onload = () => {
+        natW = img.naturalWidth;
+        natH = img.naturalHeight;
+        img.style.width = natW + 'px';
+        img.style.height = natH + 'px';
+        loaded = true;
+        stage.classList.add('loaded');
+        lb!.classList.remove('loading');
+        fitView();
+      };
+      img.src = d.src;
     }
-    function open(i: number, originX?: number, originY?: number) {
+
+    function open(i: number) {
       lastFocus = document.activeElement as HTMLElement;
-      show(i);
       lb!.hidden = false;
       document.body.style.overflow = 'hidden';
+      show(i);
       closeBtn.focus();
-      if (!reduce) {
-        // scale-and-fade out from the clicked node
-        lb!.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250, easing: 'ease-out' });
-        const r = stage.getBoundingClientRect();
-        const ox = originX !== undefined ? originX - r.left : r.width / 2;
-        const oy = originY !== undefined ? originY - r.top : r.height / 2;
-        stage.style.transformOrigin = `${ox.toFixed(0)}px ${oy.toFixed(0)}px`;
-        stage.animate(
-          [
-            { opacity: 0, transform: 'scale(0.6)' },
-            { opacity: 1, transform: 'scale(1)' },
-          ],
-          { duration: 380, easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)' }
-        );
-      }
+      if (!reduce) lb!.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, easing: 'ease-out' });
     }
     function close() {
       lb!.hidden = true;
       document.body.style.overflow = '';
+      // release the full-resolution image
+      img.onload = null;
+      img.removeAttribute('src');
+      img.style.width = img.style.height = '';
+      loaded = false;
       lastFocus?.focus();
     }
 
-    window.addEventListener('lightbox:open', (e) => {
-      const detail = (e as CustomEvent).detail;
-      open(
-        detail && typeof detail.index === 'number' ? detail.index : 0,
-        detail?.originX,
-        detail?.originY
-      );
+    // ---- pointer gestures: drag-pan, pinch-zoom, double-tap, tap-to-close ----
+    const pointers = new Map<number, { x: number; y: number }>();
+    let dragging = false, moved = false;
+    let startX = 0, startY = 0, startTx = 0, startTy = 0;
+    let pinchDist = 0, pinchScale = 1, pinchAX = 0, pinchAY = 0;
+    let lastTap = 0;
+    const distOf = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y);
+
+    stage.addEventListener('pointerdown', (e) => {
+      if (!loaded) return;
+      stage.setPointerCapture(e.pointerId);
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.size === 1) {
+        dragging = true; moved = false;
+        startX = e.clientX; startY = e.clientY; startTx = tx; startTy = ty;
+      } else if (pointers.size === 2) {
+        dragging = false;
+        const [a, b] = [...pointers.values()];
+        const r = stage.getBoundingClientRect();
+        pinchDist = distOf(a, b);
+        pinchScale = scale;
+        const mx = (a.x + b.x) / 2 - r.left, my = (a.y + b.y) / 2 - r.top;
+        pinchAX = (mx - tx) / scale;
+        pinchAY = (my - ty) / scale;
+      }
     });
 
+    stage.addEventListener('pointermove', (e) => {
+      if (!pointers.has(e.pointerId)) return;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.size === 2 && pinchDist > 0) {
+        const [a, b] = [...pointers.values()];
+        const r = stage.getBoundingClientRect();
+        const ns = Math.min(maxS, Math.max(minS, pinchScale * (distOf(a, b) / pinchDist)));
+        const mx = (a.x + b.x) / 2 - r.left, my = (a.y + b.y) / 2 - r.top;
+        scale = ns;
+        tx = mx - pinchAX * scale;
+        ty = my - pinchAY * scale;
+        moved = true;
+        apply();
+        e.preventDefault();
+      } else if (dragging && pointers.size === 1) {
+        const dx = e.clientX - startX, dy = e.clientY - startY;
+        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
+        if (scale > fit + 1e-3) {
+          tx = startTx + dx; ty = startTy + dy;
+          stage.classList.add('panning');
+          apply();
+          e.preventDefault();
+        }
+      }
+    });
+
+    function endPointer(e: PointerEvent) {
+      if (!pointers.has(e.pointerId)) return;
+      pointers.delete(e.pointerId);
+      stage.classList.remove('panning');
+      if (pointers.size < 2) pinchDist = 0;
+      if (pointers.size === 0) {
+        if (dragging && !moved) handleTap(e);
+        dragging = false;
+      } else if (pointers.size === 1) {
+        const [p] = [...pointers.values()];
+        startX = p.x; startY = p.y; startTx = tx; startTy = ty; dragging = true; moved = true;
+      }
+    }
+    stage.addEventListener('pointerup', endPointer);
+    stage.addEventListener('pointercancel', endPointer);
+
+    function handleTap(e: PointerEvent) {
+      const onImg = e.target === img;
+      const now = e.timeStamp || performance.now();
+      if (now - lastTap < 300) {
+        lastTap = 0;
+        if (onImg) {
+          const r = stage.getBoundingClientRect();
+          const px = e.clientX - r.left, py = e.clientY - r.top;
+          if (scale > fit + 1e-3) fitView();
+          else zoomTo(px, py, Math.min(maxS, Math.max(fit * 2.5, 1)));
+        }
+      } else {
+        lastTap = now;
+        // a single tap on empty space (not the art) dismisses the viewer
+        if (!onImg) close();
+      }
+    }
+
+    stage.addEventListener('wheel', (e) => {
+      if (!loaded) return;
+      e.preventDefault();
+      const r = stage.getBoundingClientRect();
+      zoomTo(e.clientX - r.left, e.clientY - r.top, scale * (e.deltaY < 0 ? 1.12 : 1 / 1.12));
+    }, { passive: false });
+
+    // ---- wiring ----
+    window.addEventListener('lightbox:open', (e) => {
+      const detail = (e as CustomEvent).detail;
+      open(detail && typeof detail.index === 'number' ? detail.index : 0);
+    });
     closeBtn.addEventListener('click', close);
     prevBtn.addEventListener('click', () => show(current - 1));
     nextBtn.addEventListener('click', () => show(current + 1));
-
-    // click on the backdrop (not the figure) closes
-    lb.addEventListener('click', (e) => {
-      if (e.target === lb || e.target === stage) close();
-    });
-    // the Inquire button jumps to contact and closes the viewer
     lb.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).closest('[data-close]')) close();
     });
+    window.addEventListener('resize', () => { if (!lb!.hidden && loaded) fitView(); });
 
+    // focus trap + keyboard
     document.addEventListener('keydown', (e) => {
       if (lb!.hidden) return;
-      if (e.key === 'Escape') close();
-      else if (e.key === 'ArrowLeft') show(current - 1);
-      else if (e.key === 'ArrowRight') show(current + 1);
+      if (e.key === 'Escape') { close(); return; }
+      if (e.key === 'ArrowLeft') { show(current - 1); return; }
+      if (e.key === 'ArrowRight') { show(current + 1); return; }
+      if (e.key === 'Tab') {
+        const f = [closeBtn, prevBtn, nextBtn, lb!.querySelector('.lb-inquire') as HTMLElement].filter(Boolean);
+        const first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
     });
   }
 </script>
