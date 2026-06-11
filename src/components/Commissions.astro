@@ -1,34 +1,47 @@
 ---
 /**
- * Commissions.astro - skill and process examples, not listings. Two real
- * portrait time-lapses from the footage play inside star-framed cards on
- * hover or when scrolled into view (one at a time), and two pet portraits
- * stand as stills. Below the grid, The Return time-lapse sits as a single
- * centered process portal in the same celestial frame, pairing with the
- * portrait cards: muted, looping, lazy-started in view, paused offscreen or
- * when the tab hides. Captions name only the piece type. One button leads
- * to the contact section. No prices anywhere.
+ * Commissions.astro - skill and process examples, not listings. Two portrait
+ * time-lapses play inside star-framed cards on hover or when scrolled into
+ * view, each posing on Hannah's finished painting as its poster frame (Mick
+ * Jagger and a mustached portrait), and two pet portraits stand as stills (a
+ * Boston Terrier and a cat). Below the grid, a process time-lapse sits as a
+ * single centered portal in the same celestial frame. Every video is muted,
+ * playsinline, preload="none" with its poster held until play, and they share
+ * one exclusive group so at most one plays at a time: only the clip in view
+ * runs, the rest pause offscreen or when the tab hides. Captions name only
+ * the piece type. One button leads to the contact section. No prices anywhere.
  */
-import { Image } from 'astro:assets';
-import taylor from '../assets/art/taylor.jpg';
+import { Image, getImage } from 'astro:assets';
 import bird from '../assets/art/bird.jpg';
+import theDon from '../assets/commissions/the-don.png';
+import mickPosterImg from '../assets/commissions/mick-jagger.png';
+import justinPosterImg from '../assets/commissions/justin.png';
+
+// Hannah's finished portrait paintings stand in as the poster frame for each
+// timelapse card: the still shows until the clip plays. Optimized down from
+// the high-res originals so the heavy page stays cheap.
+const mickPoster = await getImage({ src: mickPosterImg, width: 880, quality: 72, format: 'jpg' });
+const justinPoster = await getImage({ src: justinPosterImg, width: 880, quality: 72, format: 'jpg' });
 
 const clips = [
   {
-    src: '/video/portrait-timelapse-a',
-    poster: '/video/portrait-timelapse-a-poster.jpg',
+    sources: [{ src: '/video/mickjagger.mp4', type: 'video/mp4' }],
+    poster: mickPoster.src,
     caption: 'Portrait commission',
     note: 'Painted from your photo',
   },
   {
-    src: '/video/portrait-timelapse-b',
-    poster: '/video/portrait-timelapse-b-poster.jpg',
+    sources: [
+      { src: '/video/portrait-timelapse-b.webm', type: 'video/webm' },
+      { src: '/video/portrait-timelapse-b.mp4', type: 'video/mp4' },
+    ],
+    poster: justinPoster.src,
     caption: 'Portrait commission',
     note: 'Watch it come together',
   },
 ];
 const stills = [
-  { image: taylor, caption: 'Pet portrait', note: 'Dogs, from your photo', alt: 'Taylor, a watercolour portrait of a white poodle' },
+  { image: theDon, caption: 'Pet portrait', note: 'Dogs, from your photo', alt: 'The Don, a portrait of a black and white Boston Terrier' },
   { image: bird, caption: 'Pet portrait', note: 'Cats, from your photo', alt: 'Bird, a digital painting of a black cat with golden eyes' },
 ];
 ---
@@ -49,13 +62,12 @@ const stills = [
             muted
             loop
             playsinline
-            preload="metadata"
+            preload="none"
             poster={c.poster}
             aria-hidden="true"
             data-autovideo
           >
-            <source src={`${c.src}.webm`} type="video/webm" />
-            <source src={`${c.src}.mp4`} type="video/mp4" />
+            {c.sources.map((s) => <source src={s.src} type={s.type} />)}
           </video>
         </div>
         <figcaption class="com-cap">
@@ -88,7 +100,7 @@ const stills = [
         muted
         loop
         playsinline
-        preload="metadata"
+        preload="none"
         poster="/video/celestial-process-poster.jpg"
         aria-hidden="true"
       >
@@ -206,8 +218,8 @@ const stills = [
   ) as HTMLVideoElement[]) {
     manageVideo(v, { group: 'cards' });
   }
-  // the process portal is ambient: it loops whenever on screen instead of
-  // taking turns with the portrait cards
+  // the process portal joins the same exclusive group so the whole section
+  // never runs more than one video at once
   const portal = document.querySelector('.process-clip') as HTMLVideoElement | null;
-  if (portal) manageVideo(portal, { group: 'ambient' });
+  if (portal) manageVideo(portal, { group: 'cards' });
 </script>

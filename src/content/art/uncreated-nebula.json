@@ -5,7 +5,7 @@
   "note": "An amber and teal nebula around a bright star cluster.",
   "status": "sold",
   "image": "../../assets/art/unnamedneb.jpg",
-  "x": 16,
-  "y": 45,
-  "links": ["smaragdine-nebula"]
+  "x": 40,
+  "y": 38,
+  "links": ["smaragdine-nebula", "aurora-wolf"]
 }

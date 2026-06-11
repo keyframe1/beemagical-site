@@ -1,0 +1,11 @@
+{
+  "_todo": "TODO: this digital 'Aurora' shares its title with the sold acrylic Aurora (aurora-borealis.json). Give one a distinct name once confirmed with Hannah.",
+  "title": "Aurora",
+  "medium": "Digital painting",
+  "note": "A vivid aurora of violet, magenta, and green light bursting from a single star over a silhouetted pine treeline.",
+  "status": "available",
+  "image": "../../assets/art/aurora-digital.png",
+  "x": 83,
+  "y": 50,
+  "links": ["motorheart", "rocket-girl"]
+}

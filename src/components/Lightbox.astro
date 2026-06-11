@@ -52,8 +52,10 @@ const bgStars = works.map((w) => ({ x: w.data.x, y: w.data.y }));
           <Image
             src={w.data.image}
             alt={`${w.data.title}. ${w.data.note}`}
-            width={w.data.image.width}
-            height={w.data.image.height}
+            width={Math.min(w.data.image.width, 2400)}
+            height={Math.round(w.data.image.height * (Math.min(w.data.image.width, 2400) / w.data.image.width))}
+            quality={88}
+            format="webp"
             loading="lazy"
             class="lb-img"
           />

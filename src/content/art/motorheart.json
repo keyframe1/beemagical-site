@@ -1,0 +1,10 @@
+{
+  "title": "Motorheart",
+  "medium": "Digital painting",
+  "note": "A television-headed rider streaks through space on a rocket, ringed by a sweep of nebulae with a planet and a burning star wheeling past.",
+  "status": "available",
+  "image": "../../assets/art/motorheart.png",
+  "x": 64,
+  "y": 63,
+  "links": ["rocket-girl"]
+}

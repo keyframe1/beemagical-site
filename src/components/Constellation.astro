@@ -1,112 +1,190 @@
 ---
 /**
- * Constellation.astro - the gallery charted in stars.
- * Maps over the art collection: one node per work, placed by its x/y percent,
- * joined by lines that draw in on scroll. The bee (FaeBee) reads these nodes
- * to trace the constellation as a guide. Clicking a node opens the Lightbox.
+ * Constellation.astro - the gallery charted in stars, split into two galaxies.
  *
- * Hovering a node brings the work up: a small preview floats above the star,
- * the node and its lines brighten while the rest dims, a tiny star burst
- * fires, and a pulse of light travels along the connected lines.
+ * The art collection is divided by its medium field: every "Digital painting"
+ * forms the Digital galaxy, everything physical (acrylic, etc.) forms the
+ * Acrylic galaxy. Correcting a piece's medium later automatically moves it to
+ * the right galaxy, no code change. Each galaxy is its own constellation that
+ * works exactly like the old single one: one node per work placed by its x/y
+ * percent, joined by lines that draw in on scroll, hover lighting, the
+ * lightbox, the signatures-visible peek, and the sold-piece treatment. The two
+ * sit in the same celestial sky, stacked digital over acrylic, parted by a
+ * branded cosmic divider (a soft nebula band with a drifting comet).
  *
- * On small screens the chart is replaced by a stacked card grid (no lines).
+ * The bee (FaeBee) reads every node across both galaxies, so it traces one
+ * then drifts to the other. data-index stays the global gallery index so the
+ * Lightbox prev/next still walks the whole collection in one order.
+ *
+ * On small screens each galaxy becomes a stacked card grid (no lines).
  * Adding a painting never touches this file.
  */
 import { Image } from 'astro:assets';
 import { getArt, FEATURED_SLUG } from '../lib/art';
 
 const works = await getArt();
-const indexOf = new Map(works.map((w, i) => [w.id, i]));
+// Global gallery index: the Lightbox maps over getArt() in this same order,
+// so every node/card carries its global index for prev/next to agree.
+const globalIndex = new Map(works.map((w, i) => [w.id, i]));
 
-// Build the joining lines, de-duplicated by undirected pair so a link
-// declared on either work (or both) draws exactly one line. Each line
-// remembers its two endpoint slugs so hover can light its neighborhood.
+type Work = (typeof works)[number];
 type Line = { x1: number; y1: number; x2: number; y2: number; a: string; b: string };
-const lines: Line[] = [];
-const seen = new Set<string>();
-for (const w of works) {
-  for (const slug of w.data.links) {
-    const j = indexOf.get(slug);
-    if (j === undefined) continue;
-    const key = [w.id, slug].sort().join('|');
-    if (seen.has(key)) continue;
-    seen.add(key);
-    const o = works[j];
-    lines.push({ x1: w.data.x, y1: w.data.y, x2: o.data.x, y2: o.data.y, a: w.id, b: slug });
+
+// Digital vs physical, read straight off the medium field.
+const isDigital = (medium: string) => medium.toLowerCase().includes('digital');
+
+// Build the joining lines for one galaxy, de-duplicated by undirected pair and
+// limited to links whose other end also lives in this galaxy, so each
+// constellation closes on itself.
+function buildLines(subset: Work[]): Line[] {
+  const inSet = new Map(subset.map((w) => [w.id, w]));
+  const lines: Line[] = [];
+  const seen = new Set<string>();
+  for (const w of subset) {
+    for (const slug of w.data.links) {
+      const o = inSet.get(slug);
+      if (!o) continue;
+      const key = [w.id, slug].sort().join('|');
+      if (seen.has(key)) continue;
+      seen.add(key);
+      lines.push({ x1: w.data.x, y1: w.data.y, x2: o.data.x, y2: o.data.y, a: w.id, b: slug });
+    }
   }
+  return lines;
 }
+
+const digital = works.filter((w) => isDigital(w.data.medium));
+const acrylic = works.filter((w) => !isDigital(w.data.medium));
+
+const galaxies = [
+  { key: 'digital', label: 'Digital', flourish: 'bee', works: digital, lines: buildLines(digital) },
+  { key: 'acrylic', label: 'Acrylic', flourish: 'star', works: acrylic, lines: buildLines(acrylic) },
+];
 ---
 
 <section id="gallery" class="section">
   <div class="reveal">
     <h2 class="section-title">The Gallery</h2>
-    <p class="section-desc">Hover to bring a work up. Click to step inside.</p>
+    <p class="section-desc">Two galaxies to explore. Which will you visit first?</p>
   </div>
 
-  <div class="constellation reveal" role="group" aria-label="Gallery constellation">
-    <svg class="lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-      {lines.map((l) => (
-        <line class="base" x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} pathLength="1" data-a={l.a} data-b={l.b} />
-      ))}
-      {lines.map((l) => (
-        <line class="pulse" x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} pathLength="1" data-a={l.a} data-b={l.b} />
-      ))}
-    </svg>
+  {galaxies.map((g, gi) => (
+    <>
+      {gi > 0 && (
+        <div class="galaxy-divider reveal" role="presentation">
+          <span class="gx-neb" aria-hidden="true"></span>
+          <span class="gx-comet" aria-hidden="true"><span class="gx-comet-head"></span></span>
+        </div>
+      )}
 
-    {works.map((w, i) => (
-      <button
-        class:list={['c-node', { featured: w.id === FEATURED_SLUG, sold: w.data.status === 'sold' }]}
-        style={`left:${w.data.x}%; top:${w.data.y}%`}
-        data-index={i}
-        data-slug={w.id}
-        type="button"
-        aria-label={`Open ${w.data.title}, ${w.data.medium}`}
-      >
-        <span class="peek">
-          <Image src={w.data.image} alt="" width={280} loading="lazy" />
-          {w.data.status === 'sold' && <span class="sold-tag">Sold</span>}
-        </span>
-        <span class="dot"></span>
-        <span class="label">{w.data.title}</span>
-      </button>
-    ))}
-  </div>
+      <div class:list={['galaxy', g.key]}>
+        <h3 class="galaxy-title reveal">
+          {g.flourish === 'bee' ? (
+            <img class="gx-flourish bee" src="/logo/bee-magical-bee-body.png" alt="" width="28" height="25" aria-hidden="true" />
+          ) : (
+            <span class="gx-flourish star" aria-hidden="true"></span>
+          )}
+          <span>{g.label}</span>
+        </h3>
 
-  <!-- small screens: stacked cards instead of the chart. Each card reveals
-       on its own (not the whole grid at once): the grid is far taller than the
-       viewport, so a single reveal on the container never reaches the observer
-       threshold early and the gallery reads as blank in portrait. -->
-  <div class="c-cards" role="group" aria-label="Gallery works">
-    {works.map((w, i) => (
-      <button
-        class:list={['c-card reveal', { sold: w.data.status === 'sold' }]}
-        data-index={i}
-        type="button"
-        aria-label={w.data.status === 'sold' ? `Open ${w.data.title}, ${w.data.medium}, sold` : `Open ${w.data.title}, ${w.data.medium}`}
-      >
-        <span class="cc-art">
-          <Image src={w.data.image} alt={`${w.data.title}. ${w.data.note}`} width={640} loading="lazy" />
-          {w.data.status === 'sold' && <span class="sold-tag">Sold</span>}
-        </span>
-        <span class="cc-body">
-          <span class="cc-title">{w.data.title}</span>
-          <span class="cc-sub">{w.data.medium}</span>
-        </span>
-      </button>
-    ))}
-  </div>
+        <div class="constellation reveal" role="group" aria-label={`${g.label} constellation`}>
+          <svg class="lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            {g.lines.map((l) => (
+              <line class="base" x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} pathLength="1" data-a={l.a} data-b={l.b} />
+            ))}
+            {g.lines.map((l) => (
+              <line class="pulse" x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} pathLength="1" data-a={l.a} data-b={l.b} />
+            ))}
+          </svg>
+
+          {g.works.map((w) => (
+            <button
+              class:list={['c-node', { featured: w.id === FEATURED_SLUG, sold: w.data.status === 'sold' }]}
+              style={`left:${w.data.x}%; top:${w.data.y}%`}
+              data-index={globalIndex.get(w.id)}
+              data-slug={w.id}
+              type="button"
+              aria-label={`Open ${w.data.title}, ${w.data.medium}`}
+            >
+              <span class="peek">
+                <Image src={w.data.image} alt="" width={280} loading="lazy" />
+                {w.data.status === 'sold' && <span class="sold-tag">Sold</span>}
+              </span>
+              <span class="dot"></span>
+              <span class="label">{w.data.title}</span>
+            </button>
+          ))}
+        </div>
+
+        <!-- small screens: stacked cards instead of the chart. Each card reveals
+             on its own (not the whole grid at once): the grid is far taller than the
+             viewport, so a single reveal on the container never reaches the observer
+             threshold early and the gallery reads as blank in portrait. -->
+        <div class="c-cards" role="group" aria-label={`${g.label} works`}>
+          {g.works.map((w) => (
+            <button
+              class:list={['c-card reveal', { sold: w.data.status === 'sold' }]}
+              data-index={globalIndex.get(w.id)}
+              type="button"
+              aria-label={w.data.status === 'sold' ? `Open ${w.data.title}, ${w.data.medium}, sold` : `Open ${w.data.title}, ${w.data.medium}`}
+            >
+              <span class="cc-art">
+                <Image src={w.data.image} alt={`${w.data.title}. ${w.data.note}`} width={640} loading="lazy" />
+                {w.data.status === 'sold' && <span class="sold-tag">Sold</span>}
+              </span>
+              <span class="cc-body">
+                <span class="cc-title">{w.data.title}</span>
+                <span class="cc-sub">{w.data.medium}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
+  ))}
 </section>
 
 <style>
+  /* ---------- galaxy framing ---------- */
+  .galaxy { margin-top: var(--space-4); }
+
+  .galaxy-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-family: var(--font-head);
+    font-size: clamp(26px, 3.4vw, 40px);
+    color: var(--moon);
+    text-shadow: 0 0 18px rgba(74, 234, 255, 0.25);
+  }
+  .gx-flourish.bee {
+    width: 28px;
+    height: auto;
+    filter: drop-shadow(0 0 10px rgba(74, 234, 255, 0.6));
+  }
+  .gx-flourish.star {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff 0%, var(--gold) 40%, transparent 72%);
+    box-shadow: 0 0 12px var(--gold);
+    animation: tw 3.2s ease-in-out infinite;
+  }
+
   .constellation {
     position: relative;
     width: 100%;
     aspect-ratio: 3 / 2;
-    max-height: 70vh;
-    margin-top: var(--space-4);
+    max-height: 64vh;
+    margin-top: var(--space-2);
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: var(--radius-lg);
     background: radial-gradient(ellipse 70% 60% at 50% 45%, rgba(74, 234, 255, 0.05), transparent 70%);
+  }
+  /* the acrylic galaxy glows a touch warmer so the two read as distinct skies */
+  .galaxy.acrylic .constellation {
+    background: radial-gradient(ellipse 70% 60% at 50% 45%, rgba(233, 196, 106, 0.05), transparent 70%);
   }
 
   .lines {
@@ -262,11 +340,88 @@ for (const w of works) {
     will-change: transform, opacity;
   }
 
+  /* ---------- the cosmic divider between the two galaxies ---------- */
+  /* a soft nebula band with a comet drifting across it, parting the skies.
+     transform/opacity only; both pause when the tab hides (global.css) and
+     freeze under reduced motion. */
+  .galaxy-divider {
+    position: relative;
+    height: 84px;
+    margin: var(--space-3) 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .gx-neb {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 80%;
+    height: 60px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background:
+      radial-gradient(ellipse 60% 70% at 35% 50%, rgba(155, 48, 255, 0.30), transparent 70%),
+      radial-gradient(ellipse 55% 60% at 62% 50%, rgba(74, 234, 255, 0.22), transparent 70%),
+      radial-gradient(ellipse 40% 55% at 50% 50%, rgba(217, 70, 239, 0.18), transparent 72%);
+    filter: blur(14px);
+    opacity: 0.7;
+    animation: gxneb 9s ease-in-out infinite;
+  }
+  /* a thin star-line through the middle, the seam between galaxies */
+  .galaxy-divider::after {
+    content: '';
+    position: absolute;
+    left: 12%;
+    right: 12%;
+    top: 50%;
+    height: 1px;
+    transform: translateY(-50%);
+    background: linear-gradient(90deg, transparent, rgba(74, 234, 255, 0.5), rgba(155, 48, 255, 0.5), transparent);
+    opacity: 0.5;
+  }
+  .gx-comet {
+    position: absolute;
+    top: 38%;
+    left: 0;
+    width: 64px;
+    height: 2px;
+    transform: translateX(-120px);
+    background: linear-gradient(90deg, transparent, rgba(240, 234, 214, 0.85));
+    border-radius: 2px;
+    opacity: 0;
+    animation: gxcomet 11s linear infinite;
+  }
+  .gx-comet-head {
+    position: absolute;
+    right: -3px;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    transform: translateY(-50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff 0%, var(--cyan) 45%, transparent 75%);
+    box-shadow: 0 0 12px var(--cyan), 0 0 22px rgba(74, 234, 255, 0.7);
+  }
+
+  @keyframes gxneb {
+    0%, 100% { opacity: 0.55; transform: translate(-52%, -50%) scale(1); }
+    50% { opacity: 0.8; transform: translate(-48%, -50%) scale(1.06); }
+  }
+  @keyframes gxcomet {
+    0% { transform: translateX(-120px); opacity: 0; }
+    8% { opacity: 1; }
+    48% { opacity: 1; }
+    58% { transform: translateX(105vw); opacity: 0; }
+    100% { transform: translateX(105vw); opacity: 0; }
+  }
+
   /* ---------- stacked card grid (small screens) ---------- */
   .c-cards { display: none; }
 
   @media (max-width: 640px) {
     .constellation { display: none; }
+    .galaxy { margin-top: var(--space-3); }
+    .galaxy-divider { height: 60px; }
     .c-cards {
       display: grid;
       grid-template-columns: 1fr;
@@ -311,9 +466,10 @@ for (const w of works) {
 </style>
 
 <script>
-  const map = document.querySelector('.constellation') as HTMLElement | null;
-  if (map) {
-    // draw the lines in when the map scrolls into view
+  // Each galaxy is an independent constellation: wire draw-in and hover
+  // lighting per map so the two skies light on their own.
+  for (const map of Array.from(document.querySelectorAll('#gallery .constellation')) as HTMLElement[]) {
+    // draw the lines in when this map scrolls into view
     const io = new IntersectionObserver(
       (entries, obs) => {
         for (const e of entries) {
@@ -324,13 +480,13 @@ for (const w of works) {
     );
     io.observe(map);
 
-    // hover/focus neighborhood lighting + star burst
+    // hover/focus neighborhood lighting + star burst, scoped to this map
     const allLines = Array.from(map.querySelectorAll('.lines line')) as unknown as SVGLineElement[];
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     function light(node: HTMLElement) {
       const slug = node.dataset.slug;
-      map!.classList.add('focused');
+      map.classList.add('focused');
       node.classList.add('lit');
       for (const l of allLines) {
         l.classList.toggle('lit', l.dataset.a === slug || l.dataset.b === slug);
@@ -349,7 +505,7 @@ for (const w of works) {
       }
     }
     function unlight(node: HTMLElement) {
-      map!.classList.remove('focused');
+      map.classList.remove('focused');
       node.classList.remove('lit');
       for (const l of allLines) l.classList.remove('lit');
     }

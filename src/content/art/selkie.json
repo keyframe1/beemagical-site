@@ -1,0 +1,10 @@
+{
+  "title": "Selkie",
+  "medium": "Digital painting",
+  "note": "A selkie girl rises from dark twilight water in her seal-skin hood, her eyes pale as the sea.",
+  "status": "available",
+  "image": "../../assets/art/selkie.png",
+  "x": 17,
+  "y": 50,
+  "links": ["moon-clouds", "the-arrival"]
+}

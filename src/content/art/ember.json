@@ -5,7 +5,7 @@
   "note": "A glowing amber and orange nebula burning at the center of a deep star field.",
   "status": "available",
   "image": "../../assets/art/ember.jpg",
-  "x": 40,
-  "y": 60,
-  "links": ["aurora-wolf"]
+  "x": 50,
+  "y": 12,
+  "links": ["time-vortex", "rainbow-aurora"]
 }

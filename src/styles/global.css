@@ -228,7 +228,10 @@ html.tab-hidden .neb::after,
 html.tab-hidden .star,
 html.tab-hidden .mote,
 html.tab-hidden .bee-wings,
-html.tab-hidden .strip-track {
+html.tab-hidden .strip-track,
+html.tab-hidden .gx-neb,
+html.tab-hidden .gx-comet,
+html.tab-hidden .gx-comet-head {
   animation-play-state: paused !important;
 }
 

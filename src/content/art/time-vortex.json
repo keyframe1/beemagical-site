@@ -5,7 +5,7 @@
   "note": "A little blue police box adrift between a teal and a pink nebula in a field of stars.",
   "status": "available",
   "image": "../../assets/art/timevortex.jpg",
-  "x": 34,
-  "y": 47,
-  "links": ["ember"]
+  "x": 24,
+  "y": 22,
+  "links": ["visiting", "uncreated-nebula"]
 }

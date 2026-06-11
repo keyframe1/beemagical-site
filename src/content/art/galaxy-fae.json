@@ -1,10 +1,10 @@
 {
-  "_todo": "Medium is a best-guess, confirm with Hannah. Node id kept as galaxy-fae to preserve its constellation position and links; the title, image, and note are the real Ultraviolet.",
+  "_todo": "Medium is a best-guess, confirm with Hannah. Node id kept as galaxy-fae to preserve its constellation links; the title, image, and note are the real Ultraviolet.",
   "title": "Ultraviolet",
   "medium": "Digital painting",
   "note": "A fae face crowned with a violet nebula, eyes lit like distant stars.",
-  "image": "../../assets/art/ultraviolet.jpg",
-  "x": 72,
-  "y": 22,
-  "links": ["above-the-clouds", "rainbow-aurora"]
+  "image": "../../assets/art/ultraviolet-hr.png",
+  "x": 76,
+  "y": 24,
+  "links": ["luna", "aurora-digital"]
 }

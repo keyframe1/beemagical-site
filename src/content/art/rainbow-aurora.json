@@ -5,7 +5,7 @@
   "note": "A rainbow aurora pours from magenta through green and gold over snow-capped peaks.",
   "status": "available",
   "image": "../../assets/art/rainbowaurora.jpg",
-  "x": 66,
-  "y": 46,
-  "links": ["moon-clouds"]
+  "x": 76,
+  "y": 21,
+  "links": ["above-the-clouds", "smaragdine-nebula"]
 }

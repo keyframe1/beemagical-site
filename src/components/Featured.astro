@@ -27,8 +27,10 @@ const subLine = [d.medium, d.dimensions, d.year].filter(Boolean).join(' . ');
         <Image
           src={d.image}
           alt={`${d.title}. ${d.note}`}
-          width={d.image.width}
-          height={d.image.height}
+          width={Math.min(d.image.width, 2400)}
+          height={Math.round(d.image.height * (Math.min(d.image.width, 2400) / d.image.width))}
+          quality={90}
+          format="webp"
           loading="lazy"
         />
       </button>
