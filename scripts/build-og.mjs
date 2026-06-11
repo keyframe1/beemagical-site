@@ -29,44 +29,51 @@ const BUILD = path.join(ROOT, '.ogbuild');
 const FONTDIR = path.join(BUILD, 'fonts');
 const SRC_UV = path.join(ROOT, 'src/assets/art/ultraviolet-hr.png');
 const BEE = path.join(ROOT, 'public/logo/bee-magical-bee.png');
+const WORDMARK = path.join(ROOT, 'public/logo/bee-magical-wordmark.png');
 const OUT = path.join(ROOT, 'public/og.jpg');
 
-// Brand fonts, fetched from the Google Fonts repo (OFL licensed).
-const FONTS = {
-  'MacondoSwashCaps-Regular.ttf':
-    'https://github.com/google/fonts/raw/main/ofl/macondoswashcaps/MacondoSwashCaps-Regular.ttf',
-  'TsukimiRounded-Regular.ttf':
-    'https://github.com/google/fonts/raw/main/ofl/tsukimirounded/TsukimiRounded-Regular.ttf',
-  'TsukimiRounded-Medium.ttf':
-    'https://github.com/google/fonts/raw/main/ofl/tsukimirounded/TsukimiRounded-Medium.ttf',
-};
+// The brand name is set as the actual wordmark image, never typed, so the
+// Macondo letterforms and sparkles come straight from the logo. The only
+// typeset text is the tagline, and it is rasterised by vectorising the real
+// Tsukimi Rounded font to outlines (below), so it can never fall back to a
+// system or generated font. We therefore only need the one font file.
+const TSUKIMI = 'TsukimiRounded-Medium.ttf';
+const TSUKIMI_URL =
+  'https://github.com/google/fonts/raw/main/ofl/tsukimirounded/TsukimiRounded-Medium.ttf';
 
-async function ensureFonts() {
+async function ensureFont() {
   await fs.mkdir(FONTDIR, { recursive: true });
-  await fs.mkdir(path.join(BUILD, 'fc-cache'), { recursive: true });
-  for (const [name, url] of Object.entries(FONTS)) {
-    const dest = path.join(FONTDIR, name);
-    if (existsSync(dest)) continue;
-    process.stdout.write(`fetching font ${name}... `);
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`failed to download ${name}: ${res.status}`);
+  const dest = path.join(FONTDIR, TSUKIMI);
+  if (!existsSync(dest)) {
+    process.stdout.write(`fetching font ${TSUKIMI}... `);
+    const res = await fetch(TSUKIMI_URL);
+    if (!res.ok) throw new Error(`failed to download ${TSUKIMI}: ${res.status}`);
     await fs.writeFile(dest, Buffer.from(await res.arrayBuffer()));
     console.log('done');
   }
-  // fontconfig file so librsvg/pango can resolve the families by name
-  const conf = `<?xml version="1.0"?>
-<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
-<fontconfig>
-  <dir>${FONTDIR.replace(/\\/g, '/')}</dir>
-  <cachedir>${path.join(BUILD, 'fc-cache').replace(/\\/g, '/')}</cachedir>
-</fontconfig>`;
-  await fs.writeFile(path.join(BUILD, 'fonts.conf'), conf);
-  // must be set before sharp (and thus fontconfig) initialises
-  process.env.FONTCONFIG_FILE = path.join(BUILD, 'fonts.conf');
+  return dest;
 }
 
-await ensureFonts();
+const tsukimiPath = await ensureFont();
 const { default: sharp } = await import('sharp');
+
+// Rasterise a line of text from the real font file. sharp's `fontfile` loads
+// the genuine Tsukimi Rounded into the pango pipeline directly, so the glyphs
+// are the real font with no system or generated fallback possible. The text is
+// rendered as a glyph-shaped alpha mask, then tinted to a chosen fill colour.
+async function renderText(str, pt, dpi, fill) {
+  const mask = await sharp({
+    text: { text: str, font: `Tsukimi Rounded Medium ${pt}`, fontfile: tsukimiPath, rgba: true, dpi },
+  })
+    .png()
+    .toBuffer();
+  const m = await sharp(mask).metadata();
+  const buf = await sharp({ create: { width: m.width, height: m.height, channels: 4, background: fill } })
+    .composite([{ input: mask, blend: 'dest-in' }])
+    .png()
+    .toBuffer();
+  return { buf, w: m.width, h: m.height };
+}
 
 // Place a (possibly oversized or off-canvas) layer onto a full PW x PH
 // transparent canvas, clipping any overflow. sharp's composite needs every
@@ -294,34 +301,62 @@ const artBuf = await sharp(uvBuf)
   .toBuffer();
 
 // ---------------------------------------------------------------------------
-// 5. wordmark + tagline on the left, understated, within the safe area.
+// 5. the brand wordmark image on the left (never typed), with a soft magenta
+//    glow echoing the site, plus the tagline below as vectorised Tsukimi.
 // ---------------------------------------------------------------------------
-const textX = 92;
-const wordSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${PW}" height="${PH}" viewBox="0 0 ${W} ${H}">
-  <defs>
-    <filter id="tglow" x="-40%" y="-40%" width="180%" height="180%">
-      <feGaussianBlur stdDeviation="6" result="b"/>
-      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
-    <linearGradient id="ink" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#fdfaf0"/>
-      <stop offset="100%" stop-color="#e7dcc0"/>
-    </linearGradient>
-  </defs>
-  <text x="${textX}" y="316" font-family="Macondo Swash Caps" font-size="92"
-        fill="url(#ink)" filter="url(#tglow)" opacity="0.97">Bee Magical</text>
-  <text x="${textX + 4}" y="372" font-family="Tsukimi Rounded" font-weight="500"
-        font-size="25" letter-spacing="0.4" fill="#bcd9e6" opacity="0.92">Space and aurora paintings,</text>
-  <text x="${textX + 4}" y="406" font-family="Tsukimi Rounded" font-weight="500"
-        font-size="25" letter-spacing="0.4" fill="#bcd9e6" opacity="0.92">plus portrait and pet commissions.</text>
-</svg>`;
+const textX = 90;
 
-// small bee mascot tucked just above the wordmark's first letter
-const beeSize = 58;
+// The wordmark PNG is bright swash lettering and sparkles on a transparent
+// field, so it composites straight over the dark sky with its own alpha; no
+// knockout or blend trick needed. Sized prominently but balanced, kept within
+// the safe area, aspect preserved.
+const wmTargetW = 476;
+const wm = await sharp(WORDMARK).resize({ width: px(wmTargetW) }).png().toBuffer();
+const wmMeta = await sharp(wm).metadata();
+const wmX = px(textX);
+const wmY = px(222);
+
+// a soft magenta halo sampled from the wordmark's own shape, so the lettering
+// lifts off the field the way the hero wordmark glows (matches the site)
+const wmShape = await sharp({
+  create: { width: wmMeta.width, height: wmMeta.height, channels: 4, background: { r: 232, g: 96, b: 246, alpha: 1 } },
+})
+  .composite([{ input: wm, blend: 'dest-in' }])
+  .png()
+  .toBuffer();
+const glowPad = px(34);
+const wmGlow = await sharp({
+  create: { width: wmMeta.width + glowPad * 2, height: wmMeta.height + glowPad * 2, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+})
+  .composite([{ input: wmShape, left: glowPad, top: glowPad }])
+  .blur(px(15))
+  .png()
+  .toBuffer();
+
+// tagline: the real Tsukimi Rounded rendered from the font file, cream and
+// understated, set on two lines beneath the wordmark. Rendered at 2x with the
+// rest of the card. A faint dark underlay keeps it legible over the field.
+const cream = { r: 240, g: 234, b: 214, alpha: 1 };
+const shadow = { r: 5, g: 7, b: 14, alpha: 0.5 };
+const tLine1 = 'Space and aurora paintings,';
+const tLine2 = 'plus portrait and pet commissions.';
+const tPt = 24;
+const tDpi = 144; // ~ 24px * 2 (the card is built at 2x)
+const tl1 = await renderText(tLine1, tPt, tDpi, cream);
+const tl2 = await renderText(tLine2, tPt, tDpi, cream);
+const tl1s = await renderText(tLine1, tPt, tDpi, shadow);
+const tl2s = await renderText(tLine2, tPt, tDpi, shadow);
+const tlX = px(textX + 4);
+const tlY1 = px(350);
+const tlGap = Math.round(tl1.h * 1.18);
+const tlY2 = tlY1 + tlGap;
+
+// small bee mascot tucked just above the wordmark
+const beeSize = 54;
 const beeResized = await sharp(BEE).resize({ width: px(beeSize) }).png().toBuffer();
 const beeMeta = await sharp(beeResized).metadata();
-const beeX = px(textX - 6);
-const beeY = px(196);
+const beeX = px(textX - 2);
+const beeY = px(150);
 
 // ---------------------------------------------------------------------------
 // composite, downscale, encode.
@@ -335,7 +370,12 @@ const layers = [
   { input: artBuf, blend: 'over', left: px(artX), top: px(artY) },
   { input: await sharp(Buffer.from(vignetteSvg)).png().toBuffer(), blend: 'over', left: 0, top: 0 },
   { input: beeResized, blend: 'over', left: beeX, top: beeY },
-  { input: await sharp(Buffer.from(wordSvg)).png().toBuffer(), blend: 'over', left: 0, top: 0 },
+  { input: await onCanvas(wmGlow, wmX - glowPad, wmY - glowPad), blend: 'screen', left: 0, top: 0 },
+  { input: wm, blend: 'over', left: wmX, top: wmY },
+  { input: tl1s.buf, blend: 'over', left: tlX, top: tlY1 + 2 },
+  { input: tl2s.buf, blend: 'over', left: tlX, top: tlY2 + 2 },
+  { input: tl1.buf, blend: 'over', left: tlX, top: tlY1 },
+  { input: tl2.buf, blend: 'over', left: tlX, top: tlY2 },
 ];
 
 const composed = await base.composite(layers).png().toBuffer();
