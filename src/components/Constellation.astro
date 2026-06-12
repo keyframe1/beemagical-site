@@ -140,7 +140,13 @@ const galaxies = [
               aria-label={w.data.status === 'sold' ? `Open ${w.data.title}, ${w.data.medium}, sold` : `Open ${w.data.title}, ${w.data.medium}`}
             >
               <span class="cc-art">
-                <Image src={w.data.image} alt={`${w.data.title}. ${w.data.note}`} width={640} loading="lazy" />
+                <Image
+                  src={w.data.image}
+                  alt={`${w.data.title}. ${w.data.note}`}
+                  widths={[320, 480, 640, 960]}
+                  sizes="(max-width: 640px) 100vw, 640px"
+                  loading="lazy"
+                />
                 {w.data.status === 'sold' && <span class="sold-tag">Sold</span>}
               </span>
               <span class="cc-body">
@@ -254,12 +260,17 @@ const galaxies = [
     transform: translate(-50%, -50%);
     background: none;
     border: 0;
-    padding: 0;
+    /* padding plus a 44px minimum gives a comfortable touch target while the
+       dot stays centered on the node's point */
+    padding: 8px;
+    min-width: 44px;
+    min-height: 44px;
     cursor: pointer;
     color: var(--moon);
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 6px;
     transition: opacity 0.3s ease;
   }

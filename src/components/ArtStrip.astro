@@ -102,7 +102,8 @@ for (let i = 0; i < longer.length; i++) {
     width: max-content;
     animation: stripdrift 75s linear infinite;
   }
-  .strip:hover .strip-track { animation-play-state: paused; }
+  .strip:hover .strip-track,
+  .strip:focus-within .strip-track { animation-play-state: paused; }
 
   .strip-half { display: flex; gap: 18px; padding-right: 18px; }
 
@@ -118,7 +119,8 @@ for (let i = 0; i < longer.length; i++) {
     box-shadow: var(--shadow-card);
     transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
   }
-  .strip-item:hover {
+  .strip-item:hover,
+  .strip-item:focus-visible {
     transform: translateY(-4px);
     border-color: rgba(74, 234, 255, 0.6);
     box-shadow: var(--glow-cyan-strong), var(--shadow-card);

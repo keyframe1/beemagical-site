@@ -27,7 +27,12 @@ const year = 2026;
 </footer>
 
 <style>
-  .foot { text-align: center; padding: var(--space-4) var(--space-3) var(--space-5); position: relative; z-index: 2; }
+  .foot {
+    text-align: center;
+    padding: var(--space-4) max(var(--space-3), env(safe-area-inset-right)) calc(var(--space-5) + env(safe-area-inset-bottom)) max(var(--space-3), env(safe-area-inset-left));
+    position: relative;
+    z-index: 2;
+  }
 
   .lockup {
     display: inline-flex;
@@ -62,10 +67,24 @@ const year = 2026;
     font-weight: 500;
     letter-spacing: 0.1em;
     font-size: 13px;
+    /* center the links and dots while each link is a full tap target */
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
   }
-  .foot-links a { color: rgba(226, 232, 244, 0.7); text-decoration: none; transition: color 0.3s ease, text-shadow 0.3s ease; }
+  .foot-links a {
+    color: rgba(226, 232, 244, 0.7);
+    text-decoration: none;
+    /* 44px tap targets with spacing between them */
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 10px;
+    transition: color 0.3s ease, text-shadow 0.3s ease;
+  }
   .foot-links a:hover { color: var(--cyan); text-shadow: 0 0 14px rgba(74, 234, 255, 0.5); }
-  .foot-links .sep { color: rgba(255, 255, 255, 0.3); margin: 0 12px; }
+  .foot-links .sep { color: rgba(255, 255, 255, 0.3); }
   .foot small {
     display: block;
     font-family: var(--font-body);

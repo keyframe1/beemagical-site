@@ -27,8 +27,8 @@ const subLine = [d.medium, d.dimensions, d.year].filter(Boolean).join(' . ');
         <Image
           src={d.image}
           alt={`${d.title}. ${d.note}`}
-          width={Math.min(d.image.width, 2400)}
-          height={Math.round(d.image.height * (Math.min(d.image.width, 2400) / d.image.width))}
+          widths={[400, 580, 768, 1160]}
+          sizes="(max-width: 760px) 92vw, 580px"
           quality={90}
           format="webp"
           loading="lazy"
@@ -101,7 +101,7 @@ const subLine = [d.medium, d.dimensions, d.year].filter(Boolean).join(' . ');
     box-shadow: var(--glow-cyan), var(--shadow-card);
     transition: transform 0.4s ease, box-shadow 0.4s ease;
   }
-  .feat-img:hover { transform: translateY(-4px); box-shadow: var(--glow-magenta), 0 22px 50px rgba(0, 0, 0, 0.6); }
+  .feat-img:hover, .feat-img:focus-visible { transform: translateY(-4px); box-shadow: var(--glow-magenta), 0 22px 50px rgba(0, 0, 0, 0.6); }
   .feat-img :global(img) { width: 100%; height: auto; display: block; }
 
   .feat-sub { font-family: var(--font-body); font-weight: 300; font-size: 13px; letter-spacing: 0.06em; color: rgba(226, 232, 244, 0.55); }

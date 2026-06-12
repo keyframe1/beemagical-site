@@ -96,6 +96,8 @@ const sky = starfield({ w: 1280, h: 720, seed: 9157, bg: 110, fg: 20, id: 'lbsky
     z-index: 80;
     display: flex;
     flex-direction: column;
+    /* keep touch scroll from bleeding through to the page behind on iOS */
+    overscroll-behavior: contain;
   }
   .lb[hidden] { display: none; }
 
@@ -214,16 +216,18 @@ const sky = starfield({ w: 1280, h: 720, seed: 9157, bg: 110, fg: 20, id: 'lbsky
     transition: background 0.25s ease, box-shadow 0.25s ease;
   }
   .lb-close:hover, .lb-nav:hover { background: rgba(74, 234, 255, 0.2); box-shadow: 0 0 20px rgba(74, 234, 255, 0.35); }
-  .lb-close { top: 20px; right: 22px; width: 46px; height: 46px; font-size: 26px; line-height: 1; }
+  /* controls clear the notch in landscape via safe-area insets */
+  .lb-close { top: max(20px, env(safe-area-inset-top, 0px)); right: max(22px, env(safe-area-inset-right, 0px)); width: 46px; height: 46px; font-size: 26px; line-height: 1; }
   .lb-nav { top: 50%; transform: translateY(-50%); width: 50px; height: 50px; font-size: 30px; line-height: 1; }
-  .lb-prev { left: 16px; }
-  .lb-next { right: 16px; }
+  .lb-prev { left: max(16px, env(safe-area-inset-left, 0px)); }
+  .lb-next { right: max(16px, env(safe-area-inset-right, 0px)); }
 
   @media (max-width: 760px) {
     .lb-caption { flex-direction: column; align-items: flex-start; gap: 12px; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
     .lb-note { display: none; } /* keep the bar slim on small screens */
-    .lb-nav { top: auto; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); transform: none; }
-    .lb-close { top: 14px; right: 14px; }
+    /* prev/next stay vertically centered over the image (base rule) so they
+       never sit on top of the stacked caption; close tucks into the corner */
+    .lb-close { top: max(14px, env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); }
   }
 </style>
 

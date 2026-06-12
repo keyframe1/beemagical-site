@@ -228,9 +228,10 @@ const hasVideos = videos.length > 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 5vh 6vw;
+    padding: max(5vh, env(safe-area-inset-top)) max(6vw, env(safe-area-inset-right)) max(5vh, env(safe-area-inset-bottom)) max(6vw, env(safe-area-inset-left));
     background: rgba(2, 3, 10, 0.92);
     backdrop-filter: blur(8px);
+    overscroll-behavior: contain;
   }
   .wlb[hidden] { display: none; }
 
@@ -256,8 +257,8 @@ const hasVideos = videos.length > 0;
 
   .wlb-close {
     position: absolute;
-    top: 22px;
-    right: 24px;
+    top: max(22px, env(safe-area-inset-top));
+    right: max(24px, env(safe-area-inset-right));
     z-index: 2;
     width: 46px;
     height: 46px;

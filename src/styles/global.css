@@ -51,7 +51,11 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+/* overflow-x: clip (not hidden) keeps stray decorative layers from forcing a
+   horizontal scrollbar without turning the root into a scroll container, so
+   the sticky nav stays sticky. Set on both so either propagating to the
+   viewport is harmless. */
+html { scroll-behavior: smooth; overflow-x: clip; }
 
 body {
   background: var(--deep);
@@ -59,7 +63,7 @@ body {
   font-family: var(--font-body);
   font-weight: 300;
   line-height: 1.85;
-  overflow-x: hidden;
+  overflow-x: clip;
   min-height: 100vh;
 }
 
@@ -84,7 +88,13 @@ img { display: block; max-width: 100%; }
 /* ---------- shared structural helpers ---------- */
 .wrap { position: relative; z-index: 2; }
 
-.section { max-width: var(--maxw); margin: 0 auto; padding: var(--space-6) var(--space-3); }
+.section {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  /* horizontal padding never drops below the device safe area, so section
+     content clears the notch when the page runs edge to edge in landscape */
+  padding: var(--space-6) max(var(--space-3), env(safe-area-inset-right)) var(--space-6) max(var(--space-3), env(safe-area-inset-left));
+}
 
 .section-title {
   font-family: var(--font-head);
