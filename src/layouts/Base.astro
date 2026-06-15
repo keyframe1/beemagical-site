@@ -4,6 +4,7 @@
  * Wraps every page. Static HTML only; interactive pieces are islands.
  */
 import '../styles/global.css';
+import Analytics from '@vercel/analytics/astro';
 
 interface Props {
   title?: string;
@@ -65,6 +66,7 @@ const ogAlt = 'Ultraviolet, a cosmic self-portrait by Bee Magical, set in a star
       href="https://fonts.googleapis.com/css2?family=Macondo+Swash+Caps&family=Tsukimi+Rounded:wght@300;400;500;700&display=swap"
       rel="stylesheet"
     />
+    <Analytics />
   </head>
   <body>
     <slot />
