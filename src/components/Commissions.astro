@@ -10,8 +10,9 @@
  * single centered portal in the same celestial frame. Every video is muted,
  * playsinline, preload="none" with its poster held until play, and they share
  * one exclusive group so at most one plays at a time: only the clip in view
- * runs, the rest pause offscreen or when the tab hides. Captions name only
- * the piece type. One button leads to the contact section. No prices anywhere.
+ * runs, the rest pause offscreen or when the tab hides. The portrait clips are
+ * captioned by type; each pet still is titled with the pet's name, taken from
+ * its filename. One button leads to the contact section. No prices anywhere.
  */
 import { Image, getImage } from 'astro:assets';
 import theDon from '../assets/commissions/the-don.png';
@@ -44,11 +45,21 @@ const clips = [
     note: 'Watch it come together',
   },
 ];
+// Each pet still is titled with the pet's name, taken straight from its
+// filename (lucy -> Lucy, the-don -> The Don, anubis-and-uma -> Anubis and
+// Uma), so the title follows the file with no separate label to keep in sync.
+const minorWords = new Set(['and', 'of', 'the']);
+const petName = (file) =>
+  file
+    .split('-')
+    .map((w, i) => (i > 0 && minorWords.has(w) ? w : w.charAt(0).toUpperCase() + w.slice(1)))
+    .join(' ');
+
 const stills = [
-  { image: theDon, caption: 'Pet portrait', note: 'Dogs, from your photo', alt: 'The Don, a portrait of a black and white Boston Terrier' },
-  { image: bird, caption: 'Pet portrait', note: 'Cats, from your photo', alt: 'Bird, a digital painting of a black cat with golden eyes' },
-  { image: lucy, caption: 'Pet portrait', note: 'Dogs, from your photo', alt: 'Lucy, a painted portrait of a silver-muzzled dog with tall ears, emerging from a dark background' },
-  { image: anubisAndUma, caption: 'Pet portrait', note: 'Cats, from your photo', alt: 'Anubis and Uma, a painted portrait of two cats, one black and one cream with dark points, against a deep green background' },
+  { image: theDon, file: 'the-don', alt: 'The Don, a portrait of a black and white Boston Terrier' },
+  { image: bird, file: 'bird', alt: 'Bird, a digital painting of a black cat with golden eyes' },
+  { image: lucy, file: 'lucy', alt: 'Lucy, a painted portrait of a silver-muzzled dog with tall ears, emerging from a dark background' },
+  { image: anubisAndUma, file: 'anubis-and-uma', alt: 'Anubis and Uma, a painted portrait of two cats, one black and one cream with dark points, against a deep green background' },
 ];
 
 // Responsive sources for the still portraits. Each card renders at most about
@@ -97,8 +108,7 @@ const stillSizes = '(max-width: 480px) 88vw, (max-width: 900px) 44vw, 245px';
           <Image src={s.image} alt={s.alt} widths={stillWidths} sizes={stillSizes} loading="lazy" />
         </div>
         <figcaption class="com-cap">
-          <span class="com-type">{s.caption}</span>
-          <span class="com-note">{s.note}</span>
+          <span class="com-type">{petName(s.file)}</span>
         </figcaption>
       </figure>
     ))}
