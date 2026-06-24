@@ -3,8 +3,10 @@
  * Commissions.astro - skill and process examples, not listings. Two portrait
  * time-lapses play inside star-framed cards on hover or when scrolled into
  * view, each posing on Hannah's finished painting as its poster frame (Mick
- * Jagger and a mustached portrait), and two pet portraits stand as stills (a
- * Boston Terrier and a cat). Below the grid, a process time-lapse sits as a
+ * Jagger and a mustached portrait), and four pet portraits stand as stills,
+ * each shown complete and uncropped on the dark frame (a Boston Terrier, the
+ * cat Bird, the dog Lucy, and the pair of cats Anubis and Uma), lazy-loaded
+ * with responsive sizes. Below the grid, a process time-lapse sits as a
  * single centered portal in the same celestial frame. Every video is muted,
  * playsinline, preload="none" with its poster held until play, and they share
  * one exclusive group so at most one plays at a time: only the clip in view
@@ -12,8 +14,10 @@
  * the piece type. One button leads to the contact section. No prices anywhere.
  */
 import { Image, getImage } from 'astro:assets';
-import bird from '../assets/art/bird.jpg';
 import theDon from '../assets/commissions/the-don.png';
+import bird from '../assets/commissions/bird.png';
+import lucy from '../assets/commissions/lucy.png';
+import anubisAndUma from '../assets/commissions/anubis-and-uma.png';
 import mickPosterImg from '../assets/commissions/mick-jagger.png';
 import justinPosterImg from '../assets/commissions/justin.png';
 
@@ -43,7 +47,16 @@ const clips = [
 const stills = [
   { image: theDon, caption: 'Pet portrait', note: 'Dogs, from your photo', alt: 'The Don, a portrait of a black and white Boston Terrier' },
   { image: bird, caption: 'Pet portrait', note: 'Cats, from your photo', alt: 'Bird, a digital painting of a black cat with golden eyes' },
+  { image: lucy, caption: 'Pet portrait', note: 'Dogs, from your photo', alt: 'Lucy, a painted portrait of a silver-muzzled dog with tall ears, emerging from a dark background' },
+  { image: anubisAndUma, caption: 'Pet portrait', note: 'Cats, from your photo', alt: 'Anubis and Uma, a painted portrait of two cats, one black and one cream with dark points, against a deep green background' },
 ];
+
+// Responsive sources for the still portraits. Each card renders at most about
+// 414px wide (two-up on tablets), so phones pull a small variant instead of
+// the full-resolution art; 840 covers a 2x card. The dark frame letterboxes
+// each piece via object-fit so the whole painting and its signature read.
+const stillWidths = [240, 320, 414, 520, 680, 840];
+const stillSizes = '(max-width: 480px) 88vw, (max-width: 900px) 44vw, 245px';
 ---
 
 <section id="commissions" class="section">
@@ -81,7 +94,7 @@ const stills = [
         <div class="com-frame">
           <span class="com-star tl" aria-hidden="true"></span>
           <span class="com-star br" aria-hidden="true"></span>
-          <Image src={s.image} alt={s.alt} height={520} loading="lazy" />
+          <Image src={s.image} alt={s.alt} widths={stillWidths} sizes={stillSizes} loading="lazy" />
         </div>
         <figcaption class="com-cap">
           <span class="com-type">{s.caption}</span>

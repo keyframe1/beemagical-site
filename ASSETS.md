@@ -36,7 +36,7 @@ with a `_todo` in each `src/content/art/*.json` to confirm with Hannah.
 | mull2.jpg | Inspired by Mull (unofficial), aurora over hills, digital | Gallery (node `aurora-sky`) |
 | unnamedneb.jpg | Nebula (untitled), amber and teal nebula, acrylic | Gallery (node `uncreated-nebula`) |
 | taylor.jpg | Taylor, white poodle, watercolour | Commissions and art strip |
-| bird.jpg | Bird, black cat with golden eyes, digital | Commissions and art strip |
+| bird.jpg | Bird, black cat with golden eyes, digital | Art strip (Commissions now uses the high-res src/assets/commissions/bird.png) |
 | bee-untitled-self.jpg | Untitled self-portrait of the artist, digital | About (artist image) and art strip |
 
 The constellation node ids were kept at their old slugs so each piece holds its
@@ -64,3 +64,36 @@ known.
 | fluffy-cat.jpg | White fluffy cat pet portrait | Art strip |
 | boxer-dog.jpg | Boxer dog pet portrait | Art strip |
 | rottweiler.jpg | Rottweiler pet portrait | Art strip |
+
+## Pet commission stills (src/assets/commissions/)
+
+Hannah's signed pet portraits, supplied at full resolution and shown complete
+and uncropped inside the star-framed Commissions cards. The dark frame
+letterboxes each piece (object-fit: contain) so the whole painting and its
+signature read. They render through astro:assets with responsive widths, so
+phones pull a small variant instead of the full art.
+
+| File | Subject | Card |
+| --- | --- | --- |
+| the-don.png | The Don, a black and white Boston Terrier | Pet portrait (Dogs) |
+| bird.png | Bird, a black cat with golden eyes | Pet portrait (Cats) |
+| lucy.png | Lucy, a silver-muzzled dog with tall ears | Pet portrait (Dogs) |
+| anubis-and-uma.png | Anubis and Uma, two cats on a deep green field | Pet portrait (Cats) |
+
+bird.png is the high-resolution replacement for the older art/bird.jpg in
+Commissions; the art strip still uses the smaller art/bird.jpg thumbnail.
+
+## Brand logo and app icons
+
+| File | Role |
+| --- | --- |
+| src/assets/brand/bee-moon.png | High-res bee-and-moon logo master (source, not served) |
+| public/logo/bee-magical-bee-moon.png | Transparent in-page mark, used in the footer lockup |
+| public/favicon-16.png, -32.png, -48.png | Tab and bookmark icons |
+| public/apple-touch-icon.png | iOS home screen icon (180) |
+| public/icon-192.png, public/icon-512.png | Web app manifest icons |
+| public/site.webmanifest | Web app manifest |
+
+scripts/build-icons.mjs regenerates every icon from the master, knocking the
+logo's black field out to true transparency so no dark box shows on light
+backgrounds. Run: node scripts/build-icons.mjs
