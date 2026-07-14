@@ -1,18 +1,20 @@
 ---
 /**
- * Commissions.astro - skill and process examples, not listings. Two portrait
- * time-lapses play inside star-framed cards on hover or when scrolled into
- * view, each posing on Hannah's finished painting as its poster frame (Mick
- * Jagger and a mustached portrait), and four pet portraits stand as stills,
- * each shown complete and uncropped on the dark frame (a Boston Terrier, the
- * cat Bird, the dog Lucy, and the pair of cats Anubis and Uma), lazy-loaded
- * with responsive sizes. Below the grid, a process time-lapse sits as a
- * single centered portal in the same celestial frame. Every video is muted,
- * playsinline, preload="none" with its poster held until play, and they share
- * one exclusive group so at most one plays at a time: only the clip in view
- * runs, the rest pause offscreen or when the tab hides. The portrait clips are
- * captioned by type; each pet still is titled with the pet's name, taken from
- * its filename. One button leads to the contact section. No prices anywhere.
+ * Commissions.astro - the section reads top to bottom as one story:
+ *   1. Process opener - a full-width cinematic band that plays a piece coming
+ *      to life, the section's hero rather than a small card.
+ *   2. Examples grid - exactly six uniform cards (two portrait time-lapses and
+ *      four pet portraits) in a tidy 3x2 on desktop, filling their frames with
+ *      no letterboxing, every card sharing the same corner-star treatment and
+ *      the same title + subline label style.
+ *   3. Testimonial - a client's words glowing out of the night sky inside a
+ *      real constellation frame (see below).
+ *   4. Call to action - one button into the contact section.
+ *
+ * Every video is muted, playsinline, preload="none" with its poster held until
+ * play, and they all share one exclusive 'cards' group so at most one plays at
+ * a time: only the clip in view runs, the rest pause offscreen or when the tab
+ * hides (video-client.ts). No prices anywhere.
  */
 import { Image, getImage } from 'astro:assets';
 import theDon from '../assets/commissions/the-don.png';
@@ -36,46 +38,61 @@ const featured = testimonials[0];
 const mickPoster = await getImage({ src: mickPosterImg, width: 880, quality: 72, format: 'jpg' });
 const justinPoster = await getImage({ src: justinPosterImg, width: 880, quality: 72, format: 'jpg' });
 
-const clips = [
+// The six example cards in one list so the grid is uniform: same shape, same
+// label style (a proper title plus one short subline), whether the piece is a
+// playing time-lapse or a finished still. The two portraits carry real names
+// now, no longer generic while the pets have names.
+const cards = [
   {
-    sources: [{ src: '/video/mickjagger.mp4', type: 'video/mp4' }],
+    kind: 'video',
+    title: 'Mick Jagger',
+    subline: 'Portrait commission',
     poster: mickPoster.src,
-    caption: 'Portrait commission',
-    note: 'Painted from your photo',
+    sources: [{ src: '/video/mickjagger.mp4', type: 'video/mp4' }],
   },
   {
+    kind: 'video',
+    title: 'Justin',
+    subline: 'Portrait commission',
+    poster: justinPoster.src,
     sources: [
       { src: '/video/portrait-timelapse-b.webm', type: 'video/webm' },
       { src: '/video/portrait-timelapse-b.mp4', type: 'video/mp4' },
     ],
-    poster: justinPoster.src,
-    caption: 'Portrait commission',
-    note: 'Watch it come together',
   },
-];
-// Each pet still is titled with the pet's name, taken straight from its
-// filename (lucy -> Lucy, the-don -> The Don, anubis-and-uma -> Anubis and
-// Uma), so the title follows the file with no separate label to keep in sync.
-const minorWords = new Set(['and', 'of', 'the']);
-const petName = (file) =>
-  file
-    .split('-')
-    .map((w, i) => (i > 0 && minorWords.has(w) ? w : w.charAt(0).toUpperCase() + w.slice(1)))
-    .join(' ');
-
-const stills = [
-  { image: theDon, file: 'the-don', alt: 'The Don, a portrait of a black and white Boston Terrier' },
-  { image: bird, file: 'bird', alt: 'Bird, a digital painting of a black cat with golden eyes' },
-  { image: lucy, file: 'lucy', alt: 'Lucy, a painted portrait of a silver-muzzled dog with tall ears, emerging from a dark background' },
-  { image: anubisAndUma, file: 'anubis-and-uma', alt: 'Anubis and Uma, a painted portrait of two cats, one black and one cream with dark points, against a deep green background' },
+  { kind: 'still', title: 'The Don', subline: 'Pet portrait', image: theDon, alt: 'The Don, a portrait of a black and white Boston Terrier' },
+  { kind: 'still', title: 'Bird', subline: 'Pet portrait', image: bird, alt: 'Bird, a digital painting of a black cat with golden eyes' },
+  { kind: 'still', title: 'Lucy', subline: 'Pet portrait', image: lucy, alt: 'Lucy, a painted portrait of a silver-muzzled dog with tall ears, emerging from a dark background' },
+  { kind: 'still', title: 'Anubis and Uma', subline: 'Pet portrait', image: anubisAndUma, alt: 'Anubis and Uma, a painted portrait of two cats, one black and one cream with dark points, against a deep green background' },
 ];
 
-// Responsive sources for the still portraits. Each card renders at most about
-// 414px wide (two-up on tablets), so phones pull a small variant instead of
-// the full-resolution art; 840 covers a 2x card. The dark frame letterboxes
-// each piece via object-fit so the whole painting and its signature read.
-const stillWidths = [240, 320, 414, 520, 680, 840];
-const stillSizes = '(max-width: 480px) 88vw, (max-width: 900px) 44vw, 245px';
+// Responsive sources for the still portraits. Each card is at most ~340px wide
+// (three-up on desktop), full column width on phones, so 2x covers roughly
+// 1040px. Every card fills its frame via object-fit: cover, no letterboxing.
+const stillWidths = [320, 420, 520, 680, 840, 1040];
+const stillSizes = '(max-width: 560px) 92vw, (max-width: 900px) 46vw, 340px';
+
+// Testimonial constellation frame: four corner + four midpoint stars, joined by
+// faint boundary lines that brighten at each star and fade between them. Every
+// segment runs along an edge (corner to midpoint), so its fading gradient stays
+// clean even as the SVG stretches to the quote box. The top-right corner is the
+// one the flying bee may perch on as it drifts past.
+const tmNodes = [
+  { k: 'tl', x: 0, y: 0, corner: true },
+  { k: 'mt', x: 50, y: 0 },
+  { k: 'tr', x: 100, y: 0, corner: true, perch: true },
+  { k: 'mr', x: 100, y: 50 },
+  { k: 'br', x: 100, y: 100, corner: true },
+  { k: 'mb', x: 50, y: 100 },
+  { k: 'bl', x: 0, y: 100, corner: true },
+  { k: 'ml', x: 0, y: 50 },
+];
+// Hue shifts cyan -> violet -> magenta and back around the ring, like the sky.
+const tmHue = ['#4AEAFF', '#6EA6FF', '#9B30FF', '#BE4BF0', '#D946EF', '#BE4BF0', '#9B30FF', '#6EA6FF'];
+const tmSeg = tmNodes.map((n, i) => {
+  const m = tmNodes[(i + 1) % tmNodes.length];
+  return { i, x1: n.x, y1: n.y, x2: m.x, y2: m.y, c1: tmHue[i], c2: tmHue[(i + 1) % tmNodes.length] };
+});
 ---
 
 <section id="commissions" class="section">
@@ -84,79 +101,89 @@ const stillSizes = '(max-width: 480px) 88vw, (max-width: 900px) 44vw, 245px';
     <p class="section-desc">Portraits, pets, and custom pieces. Tell me what you have in mind.</p>
   </div>
 
-  <div class="com-grid reveal">
-    {clips.map((c) => (
-      <figure class="com-card">
-        <div class="com-frame">
-          <span class="com-star tl" aria-hidden="true"></span>
-          <span class="com-star br" aria-hidden="true"></span>
-          <video
-            muted
-            loop
-            playsinline
-            preload="none"
-            poster={c.poster}
-            aria-hidden="true"
-            data-autovideo
-          >
-            {c.sources.map((s) => <source src={s.src} type={s.type} />)}
-          </video>
-        </div>
-        <figcaption class="com-cap">
-          <span class="com-type">{c.caption}</span>
-          <span class="com-note">{c.note}</span>
-        </figcaption>
-      </figure>
-    ))}
-    {stills.map((s) => (
-      <figure class="com-card">
-        <div class="com-frame">
-          <span class="com-star tl" aria-hidden="true"></span>
-          <span class="com-star br" aria-hidden="true"></span>
-          <Image src={s.image} alt={s.alt} widths={stillWidths} sizes={stillSizes} loading="lazy" />
-        </div>
-        <figcaption class="com-cap">
-          <span class="com-type">{petName(s.file)}</span>
-        </figcaption>
-      </figure>
-    ))}
-  </div>
-
-  <figure class="com-card process reveal">
-    <div class="com-frame">
+  <!-- 1. the opener: a full-width cinematic band, the section's hero -->
+  <div class="com-opener reveal">
+    <h3 class="com-opener-title">Watch a piece come to life</h3>
+    <div class="com-stage">
       <span class="com-star tl" aria-hidden="true"></span>
       <span class="com-star br" aria-hidden="true"></span>
       <video
-        class="process-clip"
+        class="com-opener-video"
         muted
         loop
         playsinline
         preload="none"
         poster="/video/celestial-process-poster.jpg"
         aria-hidden="true"
+        data-autovideo
       >
         <source src="/video/celestial-process.webm" type="video/webm" />
         <source src="/video/celestial-process.mp4" type="video/mp4" />
       </video>
     </div>
-    <figcaption class="com-cap">
-      <span class="com-type">Process</span>
-      <span class="com-note">Watch a piece come to life</span>
-    </figcaption>
-  </figure>
+  </div>
 
+  <!-- 2. the examples: six uniform cards, 3x2 on desktop -->
+  <div class="com-grid reveal">
+    {cards.map((c) => (
+      <figure class="com-card">
+        <div class="com-frame">
+          <span class="com-star tl" aria-hidden="true"></span>
+          <span class="com-star br" aria-hidden="true"></span>
+          {c.kind === 'video' ? (
+            <video
+              muted
+              loop
+              playsinline
+              preload="none"
+              poster={c.poster}
+              aria-hidden="true"
+              data-autovideo
+            >
+              {c.sources.map((s) => <source src={s.src} type={s.type} />)}
+            </video>
+          ) : (
+            <Image src={c.image} alt={c.alt} widths={stillWidths} sizes={stillSizes} loading="lazy" />
+          )}
+        </div>
+        <figcaption class="com-cap">
+          <span class="com-type">{c.title}</span>
+          <span class="com-note">{c.subline}</span>
+        </figcaption>
+      </figure>
+    ))}
+  </div>
+
+  <!-- 3. the testimonial: words glowing out of the sky inside a constellation -->
   {featured && (
     <figure class="tm reveal">
-      {/* the constellation is drawn around the words: a faint cyan-into-violet
-          ring traced on the sky, anchored by four glowing corner stars, the
-          same star language as the contact fields and commission cards */}
-      <blockquote class="tm-quote">
-        <i class="tm-star tl" aria-hidden="true"></i>
-        <i class="tm-star tr" aria-hidden="true"></i>
-        <i class="tm-star bl" aria-hidden="true"></i>
-        <i class="tm-star br" aria-hidden="true"></i>
-        <p>{featured.quote}</p>
-      </blockquote>
+      <div class="tm-frame">
+        <div class="tm-bloom" aria-hidden="true"></div>
+        <svg class="tm-web" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            {tmSeg.map((s) => (
+              <linearGradient id={`tmg${s.i}`} gradientUnits="userSpaceOnUse" x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2}>
+                <stop offset="0" stop-color={s.c1} stop-opacity="0.9" />
+                <stop offset="0.5" stop-color={s.c1} stop-opacity="0.07" />
+                <stop offset="1" stop-color={s.c2} stop-opacity="0.9" />
+              </linearGradient>
+            ))}
+          </defs>
+          {tmSeg.map((s) => (
+            <line x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2} stroke={`url(#tmg${s.i})`} class="tm-web-line" />
+          ))}
+        </svg>
+        {tmNodes.map((n) => (
+          <i
+            class:list={['tm-star', n.corner ? 'corner' : 'mid', n.perch && 'perch']}
+            style={`left:${n.x}%; top:${n.y}%`}
+            aria-hidden="true"
+          ></i>
+        ))}
+        <blockquote class="tm-quote">
+          <p>{featured.quote}</p>
+        </blockquote>
+      </div>
       <figcaption class="tm-cite">
         <span class="tm-flourish" aria-hidden="true"></span>
         <cite>{featured.name}</cite>
@@ -164,18 +191,48 @@ const stillSizes = '(max-width: 480px) 88vw, (max-width: 900px) 44vw, 245px';
     </figure>
   )}
 
+  <!-- 4. the call to action -->
   <div class="com-cta reveal">
     <a class="btn" href="#contact">Start a commission</a>
   </div>
 </section>
 
 <style>
+  /* ---------- 1. process opener ---------- */
+  .com-opener { margin-top: var(--space-5); text-align: center; }
+  .com-opener-title {
+    font-family: var(--font-head);
+    font-size: clamp(24px, 4vw, 40px);
+    color: var(--moon);
+    line-height: 1.1;
+    text-shadow: 0 0 18px rgba(74, 234, 255, 0.25);
+    margin-bottom: var(--space-3);
+  }
+  /* the cinematic band: full width, wide frame, same celestial framing as the
+     cards but scaled up to carry the section */
+  .com-stage {
+    position: relative;
+    border: 1px solid rgba(74, 234, 255, 0.3);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: #05071a;
+    box-shadow: var(--glow-cyan), var(--shadow-card);
+  }
+  .com-opener-video {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    display: block;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  /* ---------- 2. examples grid ---------- */
   .com-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: var(--space-3);
-    margin-top: var(--space-4);
-    align-items: start;
+    margin-top: var(--space-5);
   }
 
   .com-card { margin: 0; }
@@ -194,17 +251,17 @@ const stillSizes = '(max-width: 480px) 88vw, (max-width: 900px) 44vw, 245px';
     transform: translateY(-4px);
     box-shadow: var(--glow-magenta), 0 22px 50px rgba(0, 0, 0, 0.6);
   }
+  /* every card is identical: same aspect, art filling the frame edge to edge
+     (cover, not contain) so nothing sits letterboxed with dead space */
   .com-frame video,
   .com-frame :global(img) {
     width: 100%;
-    aspect-ratio: 580 / 860;
+    aspect-ratio: 3 / 4;
     height: auto;
     display: block;
+    object-fit: cover;
+    object-position: center;
   }
-  .com-frame video { object-fit: cover; }
-  /* the still portraits show complete and uncropped so the whole piece and
-     the artist's signature read; the dark frame letterboxes them. */
-  .com-frame :global(img) { object-fit: contain; }
 
   .com-star {
     position: absolute;
@@ -240,102 +297,103 @@ const stillSizes = '(max-width: 480px) 88vw, (max-width: 900px) 44vw, 245px';
     color: rgba(226, 232, 244, 0.55);
   }
 
-  /* the centered process portal under the grid: same celestial frame, its
-     clip square and always welcome to loop while on screen */
-  .com-card.process {
-    max-width: 480px;
-    margin: var(--space-4) auto 0;
-  }
-  .com-card.process .process-clip {
-    aspect-ratio: 1;
-    object-fit: cover;
-  }
+  .com-cta { margin-top: var(--space-5); text-align: center; }
 
-  .com-cta { margin-top: var(--space-4); text-align: center; }
-
-  /* ---------- featured testimonial ---------- */
-  /* Not a card and not a panel: the words rest on the open sky, wrapped by a
-     constellation. One confident quote, constrained to a readable measure and
-     centered under the examples as proof before the call to action. */
+  /* ---------- 3. featured testimonial ---------- */
+  /* Not a card and not a panel: her words glow out of the night sky, wrapped by
+     a constellation drawn around them. Wide readable measure, generous room. */
   .tm {
-    max-width: 720px;
+    max-width: 860px;
     margin: var(--space-6) auto 0;
     text-align: center;
   }
+  .tm-frame { position: relative; }
 
-  /* the blockquote carries the constellation. A faint cyan-into-violet ring is
-     traced with the same masked-gradient border as the contact fields, lifted
-     by a soft cyan glow (glow, not a drop shadow) so it reads as light drawn on
-     the dark rather than a boxed container. */
-  .tm-quote {
-    position: relative;
-    margin: 0;
-    padding: clamp(28px, 5vw, 46px) clamp(22px, 5vw, 48px);
-    border-radius: var(--radius-md);
-    box-shadow: 0 0 40px rgba(74, 234, 255, 0.1);
+  /* the nebula bloom behind the quote: feathered violet + cyan lobes, large
+     blur, screen blend, so the words rise out of the sky the way the share
+     image does. No hard edge, no ring, no panel. */
+  .tm-bloom {
+    position: absolute;
+    inset: -12% -8%;
+    z-index: 0;
+    pointer-events: none;
+    border-radius: 50%;
+    filter: blur(48px);
+    mix-blend-mode: screen;
+    opacity: 0.55;
+    background:
+      radial-gradient(ellipse 46% 60% at 30% 42%, rgba(155, 48, 255, 0.5), transparent 70%),
+      radial-gradient(ellipse 52% 58% at 72% 60%, rgba(74, 234, 255, 0.42), transparent 72%),
+      radial-gradient(ellipse 42% 46% at 56% 26%, rgba(217, 70, 239, 0.34), transparent 72%);
   }
-  .tm-quote::before {
-    content: '';
+
+  /* the constellation lines: thin, faint, brightest at the star nodes and
+     fading between. non-scaling-stroke keeps them 1.3px however the box scales. */
+  .tm-web {
     position: absolute;
     inset: 0;
-    border-radius: var(--radius-md);
-    padding: 1px;
-    background: linear-gradient(135deg,
-      rgba(74, 234, 255, 0.55),
-      rgba(155, 48, 255, 0.4) 50%,
-      rgba(217, 70, 239, 0.5));
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    mask-composite: exclude;
-    opacity: 0.6;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
     pointer-events: none;
+    z-index: 1;
+  }
+  .tm-web-line {
+    fill: none;
+    stroke-width: 1.3;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
   }
 
-  /* the quote itself: Tsukimi Rounded, comfortably larger than body copy, cream
-     on the deep sky (high contrast, well past AA), generous line height. A soft
-     shadow keeps it legible over any faint nebula drifting behind it. */
-  .tm-quote p {
-    font-family: var(--font-body);
-    font-weight: 400;
-    font-size: clamp(19px, 2.4vw, 25px);
-    line-height: 1.7;
-    color: var(--moon);
-    text-shadow: 0 1px 10px rgba(3, 5, 14, 0.85);
-  }
-
-  /* corner stars: the anchors of the constellation, matching the star-dot nodes
-     on the contact fields and commission cards. Twinkle lives on the inner
-     pseudo so it can be gated cleanly. */
+  /* the star nodes at every corner and midpoint: glowing dots, corners cyan and
+     a touch larger, midpoints violet. The twinkle lives on the pseudo so it can
+     be gated cleanly. */
   .tm-star {
     position: absolute;
-    width: 9px;
-    height: 9px;
-    opacity: 0.7;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
     pointer-events: none;
+    z-index: 3;
   }
   .tm-star::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle, #fff 0%, rgba(74, 234, 255, 0.9) 40%, transparent 70%);
+    border-radius: 50%;
     animation: tw 3.4s ease-in-out infinite;
   }
-  .tm-star.tl { top: -4px; left: -4px; }
-  .tm-star.tr { top: -4px; right: -4px; }
-  .tm-star.bl { bottom: -4px; left: -4px; }
-  .tm-star.br { bottom: -4px; right: -4px; }
-  .tm-star.tr::before { animation-delay: 0.8s; }
-  .tm-star.bl::before { animation-delay: 1.7s; }
-  .tm-star.br::before { animation-delay: 2.5s; }
+  .tm-star.corner { width: 11px; height: 11px; }
+  .tm-star.mid { width: 8px; height: 8px; }
+  .tm-star.corner::before { background: radial-gradient(circle, #fff 0%, rgba(74, 234, 255, 0.95) 38%, transparent 72%); }
+  .tm-star.mid::before { background: radial-gradient(circle, #fff 0%, rgba(155, 48, 255, 0.9) 42%, transparent 74%); }
+  .tm-star:nth-of-type(2n)::before { animation-delay: 0.9s; }
+  .tm-star:nth-of-type(3n)::before { animation-delay: 1.8s; }
+  .tm-star:nth-of-type(4n)::before { animation-delay: 2.6s; }
 
-  /* attribution: its own line beneath, understated, in the heading font, led by
-     the same gold twinkling star flourish that marks the section labels. */
+  /* the quote: Tsukimi Rounded, a step larger, cream on the deep sky (high
+     contrast, well past AA), generous line height, roomy padding. */
+  .tm-quote {
+    position: relative;
+    z-index: 2;
+    margin: 0;
+    padding: clamp(34px, 6vw, 60px) clamp(28px, 6vw, 64px);
+  }
+  .tm-quote p {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: clamp(20px, 2.7vw, 28px);
+    line-height: 1.68;
+    color: var(--moon);
+    text-shadow: 0 1px 12px rgba(3, 5, 14, 0.82);
+  }
+
+  /* the attribution reads as a signature: a small gold star flourish (the same
+     mark the section labels use) and the name in the heading font, understated. */
   .tm-cite {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 11px;
     margin-top: var(--space-3);
   }
   .tm-flourish {
@@ -349,15 +407,15 @@ const stillSizes = '(max-width: 480px) 88vw, (max-width: 900px) 44vw, 245px';
   .tm-cite cite {
     font-family: var(--font-head);
     font-style: normal;
-    font-size: clamp(19px, 2.2vw, 24px);
-    letter-spacing: 0.02em;
-    color: rgba(240, 234, 214, 0.82);
+    font-size: clamp(20px, 2.2vw, 26px);
+    letter-spacing: 0.03em;
+    color: rgba(240, 234, 214, 0.85);
     text-shadow: 0 1px 8px rgba(3, 5, 14, 0.9);
   }
 
   /* gate the twinkle to in-view (JS toggles .lit) and tab-visible (the global
-     html.tab-hidden switch), mirroring the contact constellation. Reduced
-     motion is already handled globally, freezing these to static dots. */
+     html.tab-hidden switch), mirroring the contact constellation. The lines and
+     bloom are static. Reduced motion is handled globally, freezing the twinkle. */
   .tm:not(.lit) .tm-star::before,
   .tm:not(.lit) .tm-flourish,
   :global(html.tab-hidden) .tm-star::before,
@@ -365,25 +423,26 @@ const stillSizes = '(max-width: 480px) 88vw, (max-width: 900px) 44vw, 245px';
     animation-play-state: paused;
   }
 
+  /* ---------- responsive ---------- */
   @media (max-width: 900px) {
     .com-grid { grid-template-columns: repeat(2, 1fr); }
   }
-  @media (max-width: 480px) {
-    .com-grid { grid-template-columns: 1fr; max-width: 340px; margin-left: auto; margin-right: auto; }
+  @media (max-width: 560px) {
+    .com-grid { grid-template-columns: 1fr; max-width: 380px; margin-left: auto; margin-right: auto; }
+    .com-opener-video { aspect-ratio: 4 / 3; }
   }
 </style>
 
 <script>
   import { manageVideo } from '../lib/video-client';
+  // every managed clip (the opener band and the two portrait cards) joins the
+  // one exclusive 'cards' group, so the whole section never runs more than one
+  // video at once; each still only plays while in view with the tab visible.
   for (const v of Array.from(
     document.querySelectorAll('#commissions video[data-autovideo]')
   ) as HTMLVideoElement[]) {
     manageVideo(v, { group: 'cards' });
   }
-  // the process portal joins the same exclusive group so the whole section
-  // never runs more than one video at once
-  const portal = document.querySelector('.process-clip') as HTMLVideoElement | null;
-  if (portal) manageVideo(portal, { group: 'cards' });
 
   // testimonial: light the constellation stars only while it is on screen, the
   // same gating the contact form uses. Tab-visibility is covered globally by
