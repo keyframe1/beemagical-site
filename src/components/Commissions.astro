@@ -21,6 +21,14 @@ import lucy from '../assets/commissions/lucy.png';
 import anubisAndUma from '../assets/commissions/anubis-and-uma.png';
 import mickPosterImg from '../assets/commissions/mick-jagger.png';
 import justinPosterImg from '../assets/commissions/justin.png';
+import { testimonials } from '../lib/testimonials';
+
+// Proof at the point of decision: a single featured client quote closes the
+// section, just above the call to action. There is one voice so far, so it is
+// rendered as one confident quote rather than an empty carousel shell.
+// TODO: once several testimonials exist, render the full `testimonials` array
+// here as a row or a soft rotation instead of just the first entry.
+const featured = testimonials[0];
 
 // Hannah's finished portrait paintings stand in as the poster frame for each
 // timelapse card: the still shows until the clip plays. Optimized down from
@@ -137,6 +145,25 @@ const stillSizes = '(max-width: 480px) 88vw, (max-width: 900px) 44vw, 245px';
     </figcaption>
   </figure>
 
+  {featured && (
+    <figure class="tm reveal">
+      {/* the constellation is drawn around the words: a faint cyan-into-violet
+          ring traced on the sky, anchored by four glowing corner stars, the
+          same star language as the contact fields and commission cards */}
+      <blockquote class="tm-quote">
+        <i class="tm-star tl" aria-hidden="true"></i>
+        <i class="tm-star tr" aria-hidden="true"></i>
+        <i class="tm-star bl" aria-hidden="true"></i>
+        <i class="tm-star br" aria-hidden="true"></i>
+        <p>{featured.quote}</p>
+      </blockquote>
+      <figcaption class="tm-cite">
+        <span class="tm-flourish" aria-hidden="true"></span>
+        <cite>{featured.name}</cite>
+      </figcaption>
+    </figure>
+  )}
+
   <div class="com-cta reveal">
     <a class="btn" href="#contact">Start a commission</a>
   </div>
@@ -226,6 +253,118 @@ const stillSizes = '(max-width: 480px) 88vw, (max-width: 900px) 44vw, 245px';
 
   .com-cta { margin-top: var(--space-4); text-align: center; }
 
+  /* ---------- featured testimonial ---------- */
+  /* Not a card and not a panel: the words rest on the open sky, wrapped by a
+     constellation. One confident quote, constrained to a readable measure and
+     centered under the examples as proof before the call to action. */
+  .tm {
+    max-width: 720px;
+    margin: var(--space-6) auto 0;
+    text-align: center;
+  }
+
+  /* the blockquote carries the constellation. A faint cyan-into-violet ring is
+     traced with the same masked-gradient border as the contact fields, lifted
+     by a soft cyan glow (glow, not a drop shadow) so it reads as light drawn on
+     the dark rather than a boxed container. */
+  .tm-quote {
+    position: relative;
+    margin: 0;
+    padding: clamp(28px, 5vw, 46px) clamp(22px, 5vw, 48px);
+    border-radius: var(--radius-md);
+    box-shadow: 0 0 40px rgba(74, 234, 255, 0.1);
+  }
+  .tm-quote::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-md);
+    padding: 1px;
+    background: linear-gradient(135deg,
+      rgba(74, 234, 255, 0.55),
+      rgba(155, 48, 255, 0.4) 50%,
+      rgba(217, 70, 239, 0.5));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  /* the quote itself: Tsukimi Rounded, comfortably larger than body copy, cream
+     on the deep sky (high contrast, well past AA), generous line height. A soft
+     shadow keeps it legible over any faint nebula drifting behind it. */
+  .tm-quote p {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: clamp(19px, 2.4vw, 25px);
+    line-height: 1.7;
+    color: var(--moon);
+    text-shadow: 0 1px 10px rgba(3, 5, 14, 0.85);
+  }
+
+  /* corner stars: the anchors of the constellation, matching the star-dot nodes
+     on the contact fields and commission cards. Twinkle lives on the inner
+     pseudo so it can be gated cleanly. */
+  .tm-star {
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    opacity: 0.7;
+    pointer-events: none;
+  }
+  .tm-star::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, #fff 0%, rgba(74, 234, 255, 0.9) 40%, transparent 70%);
+    animation: tw 3.4s ease-in-out infinite;
+  }
+  .tm-star.tl { top: -4px; left: -4px; }
+  .tm-star.tr { top: -4px; right: -4px; }
+  .tm-star.bl { bottom: -4px; left: -4px; }
+  .tm-star.br { bottom: -4px; right: -4px; }
+  .tm-star.tr::before { animation-delay: 0.8s; }
+  .tm-star.bl::before { animation-delay: 1.7s; }
+  .tm-star.br::before { animation-delay: 2.5s; }
+
+  /* attribution: its own line beneath, understated, in the heading font, led by
+     the same gold twinkling star flourish that marks the section labels. */
+  .tm-cite {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: var(--space-3);
+  }
+  .tm-flourish {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff 0%, var(--gold) 40%, transparent 72%);
+    box-shadow: 0 0 12px var(--gold);
+    animation: tw 3.2s ease-in-out infinite;
+  }
+  .tm-cite cite {
+    font-family: var(--font-head);
+    font-style: normal;
+    font-size: clamp(19px, 2.2vw, 24px);
+    letter-spacing: 0.02em;
+    color: rgba(240, 234, 214, 0.82);
+    text-shadow: 0 1px 8px rgba(3, 5, 14, 0.9);
+  }
+
+  /* gate the twinkle to in-view (JS toggles .lit) and tab-visible (the global
+     html.tab-hidden switch), mirroring the contact constellation. Reduced
+     motion is already handled globally, freezing these to static dots. */
+  .tm:not(.lit) .tm-star::before,
+  .tm:not(.lit) .tm-flourish,
+  :global(html.tab-hidden) .tm-star::before,
+  :global(html.tab-hidden) .tm-flourish {
+    animation-play-state: paused;
+  }
+
   @media (max-width: 900px) {
     .com-grid { grid-template-columns: repeat(2, 1fr); }
   }
@@ -245,4 +384,20 @@ const stillSizes = '(max-width: 480px) 88vw, (max-width: 900px) 44vw, 245px';
   // never runs more than one video at once
   const portal = document.querySelector('.process-clip') as HTMLVideoElement | null;
   if (portal) manageVideo(portal, { group: 'cards' });
+
+  // testimonial: light the constellation stars only while it is on screen, the
+  // same gating the contact form uses. Tab-visibility is covered globally by
+  // html.tab-hidden, and reduced motion freezes the twinkle in global.css.
+  const tm = document.querySelector('.tm');
+  if (tm && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) tm.classList.toggle('lit', e.isIntersecting);
+      },
+      { threshold: 0.2 }
+    );
+    io.observe(tm);
+  } else if (tm) {
+    tm.classList.add('lit');
+  }
 </script>
