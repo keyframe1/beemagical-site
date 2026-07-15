@@ -1,10 +1,16 @@
 ---
 /**
  * Nav.astro - static top bar. Wordmark on the left, section links and the
- * two real external links on the right. External links open in a new tab.
+ * real external links on the right. External links open in a new tab.
+ *
+ * Contact is external too: there is no form to jump to, so the word people
+ * reach for when they want to reach her leads straight to Ko-fi commissions
+ * (lib/links.ts). The Contact section still closes the page with the same
+ * invitation and her email underneath.
  */
+import { KOFI_COMMISSIONS, KOFI_HOME } from '../lib/links';
+
 const INSTAGRAM = 'https://www.instagram.com/bee__magical/';
-const KOFI = 'https://ko-fi.com/bee_magical';
 const YOUTUBE = 'https://www.youtube.com/@beemagicalart';
 ---
 
@@ -17,10 +23,10 @@ const YOUTUBE = 'https://www.youtube.com/@beemagicalart';
     <a href="#featured">Featured</a>
     <a href="#commissions">Commissions</a>
     <a href="#stickers">Stickers</a>
-    <a href="#contact">Contact</a>
+    <a href={KOFI_COMMISSIONS} target="_blank" rel="noopener noreferrer">Contact</a>
     <a href={INSTAGRAM} target="_blank" rel="noopener">Instagram</a>
     <a href={YOUTUBE} target="_blank" rel="noopener noreferrer">YouTube</a>
-    <a href={KOFI} target="_blank" rel="noopener">Ko-fi</a>
+    <a href={KOFI_HOME} target="_blank" rel="noopener">Ko-fi</a>
   </div>
 </nav>
 

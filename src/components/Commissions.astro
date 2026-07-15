@@ -9,7 +9,8 @@
  *      the same title + subline label style.
  *   3. Testimonial - a client's words glowing out of the night sky inside a
  *      real constellation frame (see below).
- *   4. Call to action - one button into the contact section.
+ *   4. Call to action - one button into Ko-fi commissions (lib/links.ts),
+ *      closing the section right where the proof lands.
  *
  * Every video is muted, playsinline, preload="none" with its poster held until
  * play, and they all share one exclusive 'cards' group so at most one plays at
@@ -24,6 +25,7 @@ import anubisAndUma from '../assets/commissions/anubis-and-uma.png';
 import mickPosterImg from '../assets/commissions/mick-jagger.png';
 import justinPosterImg from '../assets/commissions/justin.png';
 import { testimonials } from '../lib/testimonials';
+import { KOFI_COMMISSIONS } from '../lib/links';
 
 // Proof at the point of decision: a single featured client quote closes the
 // section, just above the call to action. There is one voice so far, so it is
@@ -193,7 +195,7 @@ const tmSeg = tmNodes.map((n, i) => {
 
   <!-- 4. the call to action -->
   <div class="com-cta reveal">
-    <a class="btn" href="#contact">Start a commission</a>
+    <a class="btn" href={KOFI_COMMISSIONS} target="_blank" rel="noopener noreferrer">Start a commission</a>
   </div>
 </section>
 

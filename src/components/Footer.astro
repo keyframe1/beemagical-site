@@ -3,8 +3,9 @@
  * Footer.astro - small bee-and-moon logo mark and text lockup, the real links,
  * and a quiet sign-off. No em dashes.
  */
+import { KOFI_HOME } from '../lib/links';
+
 const INSTAGRAM = 'https://www.instagram.com/bee__magical/';
-const KOFI = 'https://ko-fi.com/bee_magical';
 const YOUTUBE = 'https://www.youtube.com/@beemagicalart';
 const year = 2026;
 ---
@@ -21,7 +22,7 @@ const year = 2026;
     <span class="sep">.</span>
     <a href={YOUTUBE} target="_blank" rel="noopener noreferrer">YouTube</a>
     <span class="sep">.</span>
-    <a href={KOFI} target="_blank" rel="noopener">Ko-fi</a>
+    <a href={KOFI_HOME} target="_blank" rel="noopener">Ko-fi</a>
   </div>
   <small>Made in Louisiana. &copy; {year} Bee Magical.</small>
 </footer>

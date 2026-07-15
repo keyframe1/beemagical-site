@@ -15,6 +15,7 @@ import Contact from '../components/Contact.astro';
 import Footer from '../components/Footer.astro';
 import Lightbox from '../components/Lightbox.astro';
 import { getArt } from '../lib/art';
+import { KOFI_HOME } from '../lib/links';
 
 // JSON-LD: the artist plus one VisualArtwork per painting
 const works = await getArt();
@@ -26,7 +27,7 @@ const artist = {
   url: site,
   jobTitle: 'Painter',
   description: 'Space and aurora paintings, plus portrait and pet commissions. Made in Louisiana.',
-  sameAs: ['https://www.instagram.com/bee__magical/', 'https://www.youtube.com/@beemagicalart', 'https://ko-fi.com/bee_magical'],
+  sameAs: ['https://www.instagram.com/bee__magical/', 'https://www.youtube.com/@beemagicalart', KOFI_HOME],
 };
 const jsonLd = {
   '@context': 'https://schema.org',

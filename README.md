@@ -85,10 +85,26 @@ Field notes:
   gallery keeps its celestial thread) live as plain images in the art strip
   (`ArtStrip.astro`) and the commissions cards (`Commissions.astro`).
 
-## Contact form
+## Where the buttons go
 
-The contact form posts to Formspree. Open `src/components/Contact.astro` and paste
-your real form ID into the `FORMSPREE_ENDPOINT` constant at the top of the file.
+There is no backend, so every commission and contact button routes to Ko-fi. All four
+destinations are defined once in `src/lib/links.ts`:
+
+- `KOFI_COMMISSIONS` anything that means "get a piece made": the nav Contact link, the
+  commissions CTA, every Inquire in the lightbox, and the closer in `Contact.astro`.
+- `KOFI_SHOP` anything that means "see the work for sale": Acquire, Order a print, and
+  the quiet line under the Acrylic galaxy label.
+- `KOFI_HOME` the profile link in the nav and footer.
+- `EMAIL` the plain fallback under the contact closer.
+
+Change those four values when Hannah moves to her own shop or booking service, and the
+whole site follows. Per-listing Ko-fi URLs (one painting, one sticker) are not in there:
+those ids are opaque and belong to the piece, so they live with the piece's own data
+(`kofiUrl` in `src/content/art/*.json`, and the sticker list in `Stickers.astro`).
+
+The contact form is parked in `src/components/ContactForm.astro`, imported by nothing and
+rendered nowhere: a form that accepts a message and sends it nowhere is worse than none.
+Re-enable it only once there is a real destination for a submission.
 
 ## Deploy
 
@@ -106,6 +122,7 @@ to regenerate the card; the brand fonts download once into `.ogbuild/` (gitignor
 - `src/components/` Nav, Loader, FaeBee, Starfield, Constellation, Lightbox, Featured, ArtStrip, Commissions, About, Contact, Footer, Hero
 - `src/content/art/` the gallery, one JSON file per work
 - `src/lib/art.ts` shared gallery ordering and the featured slug
+- `src/lib/links.ts` every outbound destination (Ko-fi commissions, shop, profile, email)
 - `src/lib/video-client.ts` shared play and pause policy for every video
 - `public/video/` web clips and posters extracted from the footage (see `ASSETS.md`)
 

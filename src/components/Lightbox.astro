@@ -19,7 +19,11 @@
  *    description, a Sold pill when applicable) with the calls to action, so it
  *    never shrinks the art. An acrylic original that carries its own Ko-fi
  *    listing gets a primary Buy on Ko-fi link and keeps Inquire beside it;
- *    everything else keeps Inquire on its own.
+ *    everything else keeps Inquire on its own. Inquire opens Ko-fi
+ *    commissions in a new tab (lib/links.ts) for every piece, sold acrylics
+ *    and digital work included, since asking about any of them means asking
+ *    for something made. It leaves the viewer open behind it, so people come
+ *    back to the art they were studying.
  *  - Esc and a visible close control both close it; focus is trapped while
  *    open and page scroll is locked. A dark scrim plus a blur of the gallery
  *    sits behind, over a faint static star field, so the constellation never
@@ -31,6 +35,7 @@
 import { getImage } from 'astro:assets';
 import { getArt } from '../lib/art';
 import { starfield } from '../lib/starfield';
+import { KOFI_COMMISSIONS } from '../lib/links';
 
 const works = await getArt();
 
@@ -99,7 +104,7 @@ const sky = starfield({ w: 1280, h: 720, seed: 9157, bg: 110, fg: 20, id: 'lbsky
     </div>
     <div class="lb-cta">
       <a class="btn lb-buy" href="#" target="_blank" rel="noopener noreferrer" hidden>Buy on Ko-fi</a>
-      <a class="btn lb-inquire" href="#contact" data-close>Inquire</a>
+      <a class="btn lb-inquire" href={KOFI_COMMISSIONS} target="_blank" rel="noopener noreferrer">Inquire</a>
     </div>
   </figcaption>
 

@@ -12,6 +12,10 @@
  * sit in the same celestial sky, stacked digital over acrylic, parted by a
  * branded cosmic divider (a soft nebula band with a drifting comet).
  *
+ * The acrylic label carries one quiet line under it into the Ko-fi shop, where
+ * the originals are actually listed. It stays in the small label voice so the
+ * chart still reads as a sky: the nodes themselves are never buy buttons.
+ *
  * The bee (FaeBee) reads every node across both galaxies, so it traces one
  * then drifts to the other. data-index stays the global gallery index so the
  * Lightbox prev/next still walks the whole collection in one order.
@@ -22,6 +26,7 @@
 import { Image } from 'astro:assets';
 import { getArt, FEATURED_SLUG } from '../lib/art';
 import { starfield } from '../lib/starfield';
+import { KOFI_SHOP } from '../lib/links';
 
 const works = await getArt();
 // Global gallery index: the Lightbox maps over getArt() in this same order,
@@ -96,6 +101,12 @@ const galaxies = [
           )}
           <span>{g.label}</span>
         </h3>
+
+        {g.key === 'acrylic' && (
+          <p class="gx-shop reveal">
+            <a href={KOFI_SHOP} target="_blank" rel="noopener noreferrer">Shop originals on Ko-fi</a>
+          </p>
+        )}
 
         <div class="constellation reveal" role="group" aria-label={`${g.label} constellation`}>
           <div class="c-skywrap" aria-hidden="true" set:html={g.sky}></div>
@@ -187,6 +198,28 @@ const galaxies = [
     background: radial-gradient(circle, #fff 0%, var(--gold) 40%, transparent 72%);
     box-shadow: 0 0 12px var(--gold);
     animation: tw 3.2s ease-in-out infinite;
+  }
+
+  /* the quiet line into the shop under the Acrylic label: the same small
+     letterspaced label voice the rest of the page uses, dim at rest, so it
+     sits beside the galaxy title without pulling focus from the art */
+  .gx-shop { text-align: center; margin-top: var(--space-1); }
+  .gx-shop a {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(226, 232, 244, 0.6);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(74, 234, 255, 0.3);
+    padding-bottom: 3px;
+    transition: color 0.3s ease, text-shadow 0.3s ease, border-color 0.3s ease;
+  }
+  .gx-shop a:hover {
+    color: var(--cyan);
+    text-shadow: 0 0 14px rgba(74, 234, 255, 0.5);
+    border-color: rgba(74, 234, 255, 0.7);
   }
 
   .constellation {

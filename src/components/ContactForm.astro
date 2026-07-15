@@ -1,0 +1,294 @@
+---
+/**
+ * ContactForm.astro - PARKED. Nothing imports this, so nothing renders it.
+ *
+ * TODO: re-enable only once there is somewhere for a message to actually go:
+ * a working backend, or Hannah's own service handling inquiries. Until then
+ * Contact.astro sends people to Ko-fi commissions with her email as the
+ * fallback, because a form that accepts a message and quietly drops it is
+ * worse than no form at all. This file is kept whole (markup, constellation
+ * styling, and the submit handler) so re-enabling it is an import in
+ * Contact.astro plus a real destination, not a rebuild.
+ *
+ * How it worked, for whoever picks this up: there was no backend, so submit
+ * built a mailto link from the fields and handed off to the visitor's mail
+ * client. Her address was assembled in JavaScript rather than sitting raw in
+ * the static HTML, for light spam protection, and the direct-email fallback
+ * link below the form was revealed by the same script. If this comes back as
+ * a real posting form, that mailto handoff is what to replace, and the
+ * address should come from EMAIL in lib/links.ts.
+ *
+ * The form reads as constellations to match the rest of the section: each
+ * field is traced by a faint cyan-into-violet line anchored by glowing corner
+ * stars (the same star-dot language as the gallery and commission cards),
+ * lighting up in cyan on focus. Only the field interiors carry a whisper of
+ * darkening and blur for legibility. The corner-star twinkle is gated by the
+ * .lit class Contact.astro toggles on the section shell, and by the global
+ * html.tab-hidden switch. No em dashes in any copy.
+ */
+---
+
+<form class="cform reveal">
+  <div class="row">
+    <label>
+      <span>Name</span>
+      <span class="cfield">
+        <input type="text" name="name" autocomplete="name" required />
+        <i class="fstar tl" aria-hidden="true"></i>
+        <i class="fstar tr" aria-hidden="true"></i>
+        <i class="fstar bl" aria-hidden="true"></i>
+        <i class="fstar br" aria-hidden="true"></i>
+      </span>
+    </label>
+    <label>
+      <span>Email</span>
+      <span class="cfield">
+        <input type="email" name="email" autocomplete="email" required />
+        <i class="fstar tl" aria-hidden="true"></i>
+        <i class="fstar tr" aria-hidden="true"></i>
+        <i class="fstar bl" aria-hidden="true"></i>
+        <i class="fstar br" aria-hidden="true"></i>
+      </span>
+    </label>
+  </div>
+  <label>
+    <span>Which work, and what are you hoping for</span>
+    <span class="cfield">
+      <textarea name="message" rows="4" required></textarea>
+      <i class="fstar tl" aria-hidden="true"></i>
+      <i class="fstar tr" aria-hidden="true"></i>
+      <i class="fstar bl" aria-hidden="true"></i>
+      <i class="fstar br" aria-hidden="true"></i>
+    </span>
+  </label>
+  <button class="btn cbtn" type="submit">
+    Send it
+    <i class="fstar tl" aria-hidden="true"></i>
+    <i class="fstar tr" aria-hidden="true"></i>
+    <i class="fstar bl" aria-hidden="true"></i>
+    <i class="fstar br" aria-hidden="true"></i>
+  </button>
+  <p class="cform-status" role="status" aria-live="polite"></p>
+  <p class="cform-alt" hidden>or email <a class="cmail" href="#"></a></p>
+</form>
+
+<style>
+  /* the form floats on the sky below her: the space above it holds her
+     face plus a comfortable gap under her chin, so she reads as the hero
+     and the form waits beneath. No panel and no solid fill anywhere. */
+  .cform {
+    margin-top: clamp(160px, calc(34.9vw + 41px), 520px);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .cform label { display: flex; flex-direction: column; gap: 7px; }
+  .cform label > span:first-child {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(226, 232, 244, 0.6);
+    text-shadow: 0 1px 8px rgba(3, 5, 14, 0.9);
+  }
+
+  /* ---------- constellation fields ---------- */
+  /* the wrapper draws the constellation; the control inside stays nearly
+     transparent so the sky and her portrait show through */
+  .cfield {
+    position: relative;
+    display: block;
+    border-radius: 12px;
+  }
+  /* the connecting line: a thin cyan-into-violet ring, masked so only a
+     1px gradient trace remains, soft and low opacity at rest */
+  .cfield::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    padding: 1px;
+    background: linear-gradient(135deg,
+      rgba(74, 234, 255, 0.55),
+      rgba(155, 48, 255, 0.4) 50%,
+      rgba(217, 70, 239, 0.5));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0.55;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  .cfield input,
+  .cfield textarea {
+    width: 100%;
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 16px;
+    color: var(--moon);
+    background: rgba(5, 7, 26, 0.3);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: none;
+    border-radius: 12px;
+    padding: 13px 15px;
+    resize: vertical;
+  }
+  /* focus: the constellation lights up. The ring brightens, a cyan glow
+     wakes, and the corner stars flare. Box-shadow transitions on focus are
+     state changes, not running animations. */
+  .cfield:focus-within {
+    box-shadow: 0 0 20px rgba(74, 234, 255, 0.22);
+  }
+  .cfield:focus-within::before {
+    opacity: 1;
+    background: linear-gradient(135deg,
+      rgba(74, 234, 255, 0.95),
+      rgba(74, 234, 255, 0.55) 50%,
+      rgba(155, 48, 255, 0.7));
+  }
+  .cfield input:focus,
+  .cfield textarea:focus { outline: none; }
+
+  /* corner stars: the anchors of each constellation, matching the star-dot
+     nodes on the gallery and commission cards. The twinkle lives on the
+     inner pseudo so focus can scale and brighten the dot itself. */
+  .fstar {
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    opacity: 0.65;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .fstar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, #fff 0%, rgba(74, 234, 255, 0.9) 40%, transparent 70%);
+    animation: tw 3.4s ease-in-out infinite;
+  }
+  .fstar.tl { top: -4px; left: -4px; }
+  .fstar.tr { top: -4px; right: -4px; }
+  .fstar.bl { bottom: -4px; left: -4px; }
+  .fstar.br { bottom: -4px; right: -4px; }
+  .fstar.tr::before { animation-delay: 0.8s; }
+  .fstar.bl::before { animation-delay: 1.7s; }
+  .fstar.br::before { animation-delay: 2.5s; }
+  .cfield:focus-within .fstar {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+  /* the twinkle runs only while the section is on screen with the tab
+     visible; reduced motion stops it globally, leaving static dots */
+  :global(.contact-shell:not(.lit)) .fstar::before,
+  :global(html.tab-hidden) .fstar::before {
+    animation-play-state: paused;
+  }
+
+  /* the button keeps its pill shape and gains the same constellation:
+     a faint pill-traced ring and corner stars, brightening on hover/focus */
+  .cbtn {
+    align-self: flex-start;
+    cursor: pointer;
+    border-color: transparent;
+  }
+  .cbtn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-pill);
+    padding: 1px;
+    background: linear-gradient(135deg,
+      rgba(74, 234, 255, 0.55),
+      rgba(155, 48, 255, 0.4) 50%,
+      rgba(217, 70, 239, 0.5));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  .cbtn:hover::before,
+  .cbtn:focus-visible::before { opacity: 1; }
+  .cbtn:hover .fstar,
+  .cbtn:focus-visible .fstar { opacity: 1; transform: scale(1.25); }
+
+  .cform-status {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: 15px;
+    color: var(--gold);
+    min-height: 1.2em;
+    text-shadow: 0 1px 8px rgba(3, 5, 14, 0.9);
+  }
+  .cform-status.err { color: var(--magenta); }
+
+  /* the quiet direct-email fallback under the form */
+  .cform-alt {
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 14px;
+    color: rgba(226, 232, 244, 0.6);
+    text-shadow: 0 1px 8px rgba(3, 5, 14, 0.9);
+  }
+  .cform-alt[hidden] { display: none; }
+  .cform-alt .cmail {
+    color: var(--cyan);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(74, 234, 255, 0.35);
+    transition: text-shadow 0.3s ease, border-color 0.3s ease;
+  }
+  .cform-alt .cmail:hover {
+    text-shadow: 0 0 14px rgba(74, 234, 255, 0.5);
+    border-color: rgba(74, 234, 255, 0.7);
+  }
+
+  @media (max-width: 560px) {
+    .row { grid-template-columns: 1fr; }
+  }
+</style>
+
+<script>
+  // ---------- form: build a mailto and open the visitor's mail app ----------
+  // No backend. Her address is assembled here, never sitting raw in the
+  // static HTML, for light spam protection. Submit prefills a message; the
+  // fallback link below opens a blank email to the same address.
+  const ADDR = ['beemagicalart', 'gmail.com'].join('@');
+
+  const form = document.querySelector('.cform') as HTMLFormElement | null;
+  if (form) {
+    const status = form.querySelector('.cform-status') as HTMLElement;
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      status.classList.remove('err');
+
+      const data = new FormData(form);
+      const name = (data.get('name') || '').toString().trim();
+      const email = (data.get('email') || '').toString().trim();
+      const message = (data.get('message') || '').toString().trim();
+
+      const subject = `Bee Magical inquiry from ${name || 'a visitor'}`;
+      const body = `Name: ${name}\nEmail: ${email}\n\n${message}`;
+      const href = `mailto:${ADDR}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+      status.textContent = 'Opening your email app with this message ready to send...';
+      window.location.href = href;
+    });
+  }
+
+  // reveal the direct-email fallback, assembled in JS for the same reason
+  const alt = document.querySelector('.cform-alt') as HTMLElement | null;
+  const mail = document.querySelector('.cmail') as HTMLAnchorElement | null;
+  if (alt && mail) {
+    mail.textContent = ADDR;
+    mail.href = `mailto:${ADDR}`;
+    alt.hidden = false;
+  }
+</script>

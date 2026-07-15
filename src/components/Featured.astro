@@ -2,11 +2,13 @@
 /**
  * Featured.astro - the headline work. Pulls the featured piece from the
  * collection and renders it large inside a slow prismatic rim glow in the
- * brand colors. "Acquire" points to the contact section. Clicking the image
- * opens it in the Lightbox.
+ * brand colors. Both calls to action are buying intent, so both open the
+ * Ko-fi shop (lib/links.ts), where the originals and prints actually live.
+ * Clicking the image opens it in the Lightbox.
  */
 import { Image } from 'astro:assets';
 import { getArt, FEATURED_SLUG } from '../lib/art';
+import { KOFI_SHOP } from '../lib/links';
 
 const works = await getArt();
 const index = works.findIndex((w) => w.id === FEATURED_SLUG);
@@ -41,12 +43,8 @@ const subLine = [d.medium, d.dimensions, d.year].filter(Boolean).join(' . ');
       <p class="feat-note">{d.note}</p>
       <p class="feat-price">{d.price}{d.prints && d.printsFrom ? ` . Prints from $${d.printsFrom}` : ''}</p>
       <div class="cta">
-        <!-- Acquire points to the contact section. To send buyers straight to
-             the Ko-fi shop instead, swap href to "https://ko-fi.com/bee_magical/shop". -->
-        <a class="btn" href="#contact">Acquire</a>
-        <!-- Prints button: point this to the Ko-fi shop when it is live, e.g.
-             href="https://ko-fi.com/bee_magical/shop" target="_blank" rel="noopener". -->
-        <a class="btn ghost" href="#contact">Order a print</a>
+        <a class="btn" href={KOFI_SHOP} target="_blank" rel="noopener noreferrer">Acquire</a>
+        <a class="btn ghost" href={KOFI_SHOP} target="_blank" rel="noopener noreferrer">Order a print</a>
       </div>
     </div>
   </div>
