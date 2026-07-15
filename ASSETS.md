@@ -83,6 +83,20 @@ phones pull a small variant instead of the full art.
 bird.png is the high-resolution replacement for the older art/bird.jpg in
 Commissions; the art strip still uses the smaller art/bird.jpg thumbnail.
 
+## Portrait pieces (src/assets/commissions/)
+
+Hannah's two signed celebrity portraits, supplied at full resolution. Each does
+double duty: it is the poster frame behind its Commissions time-lapse card, and
+it is a piece in its own right in the Digital galaxy, where the lightbox loads
+the full native width so the whole painting and its signature can be studied.
+The Commissions cards stay clean proof of the commission work; the print of each
+is sold from its gallery node instead, through `kofiPrintUrl`.
+
+| File | Artwork | Used in |
+| --- | --- | --- |
+| mick-jagger.png | Mick Jagger, 2400x3360, signed | Commissions poster and gallery (node `mick-jagger`) |
+| justin.png | Justin Hawkins, 3300x5100 (11x17 at 300dpi), signed | Commissions poster and gallery (node `justin-hawkins`) |
+
 ## Brand logo and app icons
 
 | File | Role |
