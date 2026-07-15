@@ -22,6 +22,8 @@
  *              boundaries (cooldown guarded).
  *  4. guide  - when the constellation is in view it slows to a calm flap
  *              and traces the nodes, then lifts off and resumes wandering.
+ *  5. perch  - alights on any point marked data-bee-perch as it drifts past,
+ *              holds a beat, then lifts off. Desktop only, once per visit.
  *
  * Continuously emits cyan + gold sparkles and slower, larger fae-dust motes
  * that drift down behind it. Transform/opacity only, rAF throttled, paused
@@ -245,28 +247,40 @@
         .filter((n) => n.offsetParent !== null);
     }
 
-    // ---------- testimonial perch wiring ----------
-    // The bee may alight on the testimonial's top-right corner star as it drifts
-    // past: once per visit, desktop only, and only while that frame is in view
-    // with the tab visible (the loop already pauses when hidden). Cheap: it
-    // reuses the same steer-and-settle motion the constellation guide uses.
-    let tmInView = false;
-    let perchedThisVisit = false;
-    let perchHoldUntil = 0;
-    const perchStar = document.querySelector('.tm .tm-star.perch') as HTMLElement | null;
-    const perchFrame = perchStar?.closest('.tm') as HTMLElement | null;
-    if (perchFrame) {
-      const perchIo = new IntersectionObserver(
+    // ---------- perch wiring ----------
+    // The bee may alight on any point marked data-bee-perch as it drifts past:
+    // the testimonial's top-right corner star, the contact constellation's
+    // bright node. Once per visit each, desktop only, and only while that
+    // point's frame (data-bee-perch-frame) is in view with the tab visible (the
+    // loop already pauses when hidden). Cheap: it reuses the same
+    // steer-and-settle motion the constellation guide uses. data-perch-lift
+    // says how far above the point to settle, in half bee-heights, so the bee
+    // reads as perched on it rather than sitting on top of what is underneath.
+    type Perch = { star: HTMLElement; lift: number; inView: boolean; done: boolean };
+    const perches: Perch[] = (
+      Array.from(document.querySelectorAll('[data-bee-perch]')) as HTMLElement[]
+    ).map((star) => {
+      const p: Perch = {
+        star,
+        lift: Number(star.dataset.perchLift) || 1.05,
+        inView: false,
+        done: false,
+      };
+      const frame = (star.closest('[data-bee-perch-frame]') as HTMLElement | null) || star;
+      new IntersectionObserver(
         (entries) => {
           for (const e of entries) {
-            tmInView = e.isIntersecting && e.intersectionRatio > 0.4;
-            if (!tmInView) perchedThisVisit = false; // re-arm when it leaves view
+            p.inView = e.isIntersecting && e.intersectionRatio > 0.4;
+            if (!p.inView) p.done = false; // re-arm when it leaves view
           }
         },
         { threshold: [0, 0.4, 0.8] }
-      );
-      perchIo.observe(perchFrame);
-    }
+      ).observe(frame);
+      return p;
+    });
+    let perch: Perch | null = null;
+    let perchHoldUntil = 0;
+    const openPerch = () => perches.find((p) => p.inView && !p.done) || null;
 
     // ---------- trail emission ----------
     let lastEmit = 0;
@@ -396,13 +410,17 @@
           }
         }
 
-        // enter the perch when the testimonial drifts into view: once per visit,
+        // enter the perch when a marked point drifts into view: once per visit,
         // desktop only, and only from a plain wander (never mid-guide)
-        if (mode === 'wander' && tmInView && !perchedThisVisit && !smallScreen.matches && perchStar) {
-          mode = 'perch';
-          setFlap('calm');
+        if (mode === 'wander' && !smallScreen.matches) {
+          const open = openPerch();
+          if (open) {
+            perch = open;
+            mode = 'perch';
+            setFlap('calm');
+          }
         }
-        const wantPerch = mode === 'perch' && tmInView && perchStar;
+        const wantPerch = mode === 'perch' && !!perch && perch.inView && !perch.done;
 
         if (mode === 'guide' && guideNodes.length) {
           const node = guideNodes[guideIdx];
@@ -423,17 +441,19 @@
           curX += dx * 0.05;
           curY += dy * 0.05;
         } else if (wantPerch) {
-          // steer to the corner star and settle just above it, so the bee reads
-          // as perched on the point; hold a beat, then lift off and drift on
-          const r = perchStar.getBoundingClientRect();
+          // steer to the star and settle just above it, so the bee reads as
+          // perched on the point; hold a beat, then lift off and drift on
+          const p = perch!;
+          const r = p.star.getBoundingClientRect();
           targetX = r.left + r.width / 2 - halfW();
-          targetY = r.top + r.height / 2 - halfH() * 1.05;
+          targetY = r.top + r.height / 2 - halfH() * p.lift;
           const dx = targetX - curX, dy = targetY - curY;
           if (Math.hypot(dx, dy) < 16) {
             if (!perchHoldUntil) perchHoldUntil = now + 2400;
             else if (now >= perchHoldUntil) {
               perchHoldUntil = 0;
-              perchedThisVisit = true;
+              p.done = true;
+              perch = null;
               mode = 'wander';
               liftY = -70;
               setFlap('cruise');
@@ -442,9 +462,9 @@
           curX += dx * 0.07;
           curY += dy * 0.07;
         } else {
-          // an interrupted perch (the testimonial scrolled away) drops cleanly
-          // back to wandering rather than chasing an off-screen star
-          if (mode === 'perch') { perchHoldUntil = 0; setFlap('cruise'); }
+          // an interrupted perch (the frame scrolled away) drops cleanly back
+          // to wandering rather than chasing an off-screen star
+          if (mode === 'perch') { perchHoldUntil = 0; perch = null; setFlap('cruise'); }
           mode = galleryInView && !guidedThisVisit && !smallScreen.matches ? 'guide' : 'wander';
           // wander: vertical tracks scroll, horizontal sine drift
           const doc = document.documentElement;

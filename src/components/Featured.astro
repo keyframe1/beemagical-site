@@ -2,19 +2,24 @@
 /**
  * Featured.astro - the headline work. Pulls the featured piece from the
  * collection and renders it large inside a slow prismatic rim glow in the
- * brand colors. Both calls to action are buying intent, so both open the
- * Ko-fi shop (lib/links.ts), where the originals and prints actually live.
- * Clicking the image opens it in the Lightbox.
+ * brand colors. Clicking the image opens it in the Lightbox.
+ *
+ * The calls to action come from ctasFor (lib/art.ts), the same helper the
+ * Lightbox uses, so the spotlight and the viewer always offer this piece the
+ * same thing: a link straight to its own listing when one exists, and the
+ * commission link beside it. Whatever the featured piece happens to be, it
+ * inherits that logic rather than hardcoding a destination. No price here; the
+ * Ko-fi listing quotes it.
  */
 import { Image } from 'astro:assets';
-import { getArt, FEATURED_SLUG } from '../lib/art';
-import { KOFI_SHOP } from '../lib/links';
+import { getArt, FEATURED_SLUG, ctasFor } from '../lib/art';
 
 const works = await getArt();
 const index = works.findIndex((w) => w.id === FEATURED_SLUG);
 const work = works[index];
 const d = work.data;
 const subLine = [d.medium, d.dimensions, d.year].filter(Boolean).join(' . ');
+const { buy, commission } = ctasFor(d);
 ---
 
 <section id="featured" class="section">
@@ -41,10 +46,21 @@ const subLine = [d.medium, d.dimensions, d.year].filter(Boolean).join(' . ');
     <div class="feat-body">
       <p class="feat-sub">{subLine}</p>
       <p class="feat-note">{d.note}</p>
-      <p class="feat-price">{d.price}{d.prints && d.printsFrom ? ` . Prints from $${d.printsFrom}` : ''}</p>
       <div class="cta">
-        <a class="btn" href={KOFI_SHOP} target="_blank" rel="noopener noreferrer">Acquire</a>
-        <a class="btn ghost" href={KOFI_SHOP} target="_blank" rel="noopener noreferrer">Order a print</a>
+        {buy && (
+          <a class="btn" href={buy.href} target="_blank" rel="noopener noreferrer" aria-label={buy.aria}>
+            {buy.label}
+          </a>
+        )}
+        <a
+          class:list={['btn', buy && 'ghost']}
+          href={commission.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={commission.aria}
+        >
+          {commission.label}
+        </a>
       </div>
     </div>
   </div>
@@ -104,7 +120,6 @@ const subLine = [d.medium, d.dimensions, d.year].filter(Boolean).join(' . ');
 
   .feat-sub { font-family: var(--font-body); font-weight: 300; font-size: 13px; letter-spacing: 0.06em; color: rgba(226, 232, 244, 0.55); }
   .feat-note { font-family: var(--font-body); font-weight: 300; font-size: clamp(17px, 2vw, 20px); color: rgba(226, 232, 244, 0.85); margin-top: 14px; }
-  .feat-price { font-family: var(--font-body); font-weight: 500; font-size: 16px; color: var(--cyan); margin-top: 16px; }
   .cta { margin-top: 26px; display: flex; gap: 14px; flex-wrap: wrap; }
 
   .eyebrow {

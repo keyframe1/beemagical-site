@@ -54,6 +54,12 @@ const cards = [
   },
   {
     kind: 'video',
+    // TODO: a print of this portrait is listed on Ko-fi
+    // (https://ko-fi.com/s/0cc2109792). Confirm with Hannah whether this card
+    // should offer it. Nothing here links out today on purpose: the grid is
+    // proof of the commission work, and the section closes on one call to
+    // action rather than six competing ones. Prints of the gallery pieces are
+    // wired separately, through kofiPrintUrl in src/content/art.
     title: 'Justin',
     subline: 'Portrait commission',
     poster: justinPoster.src,
@@ -158,7 +164,7 @@ const tmSeg = tmNodes.map((n, i) => {
 
   <!-- 3. the testimonial: words glowing out of the sky inside a constellation -->
   {featured && (
-    <figure class="tm reveal">
+    <figure class="tm reveal" data-bee-perch-frame>
       <div class="tm-frame">
         <div class="tm-bloom" aria-hidden="true"></div>
         <svg class="tm-web" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
@@ -179,6 +185,7 @@ const tmSeg = tmNodes.map((n, i) => {
           <i
             class:list={['tm-star', n.corner ? 'corner' : 'mid', n.perch && 'perch']}
             style={`left:${n.x}%; top:${n.y}%`}
+            data-bee-perch={n.perch ? '' : undefined}
             aria-hidden="true"
           ></i>
         ))}

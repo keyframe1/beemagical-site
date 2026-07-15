@@ -2,13 +2,23 @@
 /**
  * Stickers.astro - four die-cut sticker designs floating directly on the
  * celestial sky. These are transparent PNGs with no background, so they sit
- * on the sky with nothing behind them: no cards, no panels. A soft glow
- * (drop-shadow on the transparent shape) lifts each off the dark. Each one
- * bobs slowly on its own phase and speed, drifting independently, and lifts
- * a little on hover. Transform and opacity only; the bob runs only while the
- * section is in view and the tab is visible, paused otherwise. Reduced motion
- * holds them still (global.css stops all animation). Title, price, and a buy
- * link to that sticker's own Ko-fi listing sit under each.
+ * on the sky with nothing behind them: no cards, no panels, no boxed buttons.
+ * A soft glow (drop-shadow on the transparent shape) lifts each off the dark.
+ * Each one bobs slowly on its own phase and speed, drifting independently.
+ * Transform and opacity only; the bob runs only while the section is in view
+ * and the tab is visible, paused otherwise. Reduced motion holds them still
+ * (global.css stops all animation).
+ *
+ * The sticker itself is the buyable object: the whole unit, shape and name
+ * together, is one link to that sticker's own Ko-fi listing. Three things say
+ * so without a box around them:
+ *   - a small price tag pill on the shape, the one price the site quotes, and
+ *     the persistent cue so touch users know it is for sale without hovering
+ *   - a lift and a brighter glow on hover and keyboard focus
+ *   - a faint "Buy on Ko-fi" hint that fades in underneath, its line always
+ *     reserved so nothing shifts when it appears
+ * The link carries the accessible name, so the shape inside is alt="" rather
+ * than announcing the art twice.
  */
 import { Image } from 'astro:assets';
 import gvo from '../assets/stickers/gvo.png';
@@ -22,25 +32,21 @@ const stickers = [
   {
     image: gvo,
     title: 'Good Vibes Only',
-    alt: 'Good Vibes Only sticker in iridescent bubble lettering',
     kofiUrl: 'https://ko-fi.com/s/332300ea0d',
   },
   {
     image: lil,
     title: 'Love is Love',
-    alt: 'Love is Love sticker with a rainbow gradient and a pink heart',
     kofiUrl: 'https://ko-fi.com/s/fc8f02575e',
   },
   {
     image: bk,
     title: 'Bee Kind',
-    alt: 'Bee Kind sticker in pink glittered script with a little bee',
     kofiUrl: 'https://ko-fi.com/s/a3cba5bd6c',
   },
   {
     image: chlta,
     title: '¡Sé buena gente... O chancleta!',
-    alt: 'Se buena gente o chancleta sticker with a brown chancleta sandal',
     kofiUrl: 'https://ko-fi.com/s/ff6012a9b5',
   },
 ];
@@ -54,24 +60,31 @@ const stickers = [
 
   <div class="sticker-row reveal" role="list">
     {stickers.map((s) => (
-      <figure class="sticker" role="listitem">
-        <span class="float">
-          <Image src={s.image} alt={s.alt} width={440} loading="lazy" />
-        </span>
-        <figcaption class="sticker-cap">
-          <span class="sticker-title">{s.title}</span>
-          <span class="sticker-price">$5</span>
-          <a
-            class="btn sticker-buy"
-            href={s.kofiUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={`Buy ${s.title} on Ko-fi`}
-          >
-            Buy on Ko-fi
-          </a>
-        </figcaption>
-      </figure>
+      <div class="sticker" role="listitem">
+        <a
+          class="sticker-link"
+          href={s.kofiUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`Buy ${s.title} sticker on Ko-fi, 5 dollars`}
+        >
+          <span class="float">
+            <span class="shape">
+              <Image src={s.image} alt="" width={440} loading="lazy" />
+              <span class="tag" aria-hidden="true">$5</span>
+            </span>
+          </span>
+          <span class="sticker-cap">
+            <span class="sticker-title">{s.title}</span>
+            <span class="sticker-hint" aria-hidden="true">
+              Buy on Ko-fi
+              <svg class="hint-arrow" viewBox="0 0 12 10" width="12" height="10" fill="none" aria-hidden="true">
+                <path d="M1 5h9M6.5 1.5 10 5l-3.5 3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+          </span>
+        </a>
+      </div>
     ))}
   </div>
 </section>
@@ -86,12 +99,17 @@ const stickers = [
   }
 
   /* no card, no panel: the die-cut shape floats straight on the sky */
-  .sticker {
-    margin: 0;
+  .sticker { margin: 0; }
+
+  /* the whole unit is the buy control: shape, price tag, and name in one link */
+  .sticker-link {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: var(--space-2);
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
   }
 
   /* the bobbing wrapper: transform only, paused unless the section is in
@@ -107,28 +125,72 @@ const stickers = [
     will-change: transform;
   }
   .sticker-row.in-view .float { animation-play-state: running; }
-  :global(html.tab-hidden) .float { animation-play-state: paused; }
+  /* !important because .sticker-row.in-view .float outranks this on specificity
+     and would otherwise keep the bob running in a hidden tab. Same convention
+     global.css uses for its own tab-hidden pauses. */
+  :global(html.tab-hidden) .float { animation-play-state: paused !important; }
 
   .sticker:nth-child(1) .float { animation-name: stickerbobA; animation-duration: 6s;   animation-delay: -0.4s; }
   .sticker:nth-child(2) .float { animation-name: stickerbobB; animation-duration: 7.6s; animation-delay: -2.6s; }
   .sticker:nth-child(3) .float { animation-name: stickerbobA; animation-duration: 8.4s; animation-delay: -1.3s; }
   .sticker:nth-child(4) .float { animation-name: stickerbobB; animation-duration: 6.8s; animation-delay: -3.7s; }
 
-  /* the soft glow that lifts the transparent shape off the dark sky, plus a
-     gentle hover lift and scale. Filter drop-shadow follows the die-cut edge
-     instead of a rectangular box, since there is no card. */
+  /* wraps tight to the die-cut art so the price tag hangs off the shape itself
+     rather than floating in the empty column beside it. The lift lives here so
+     the tag rides along with the sticker it is tagging. */
+  .shape {
+    position: relative;
+    display: flex;
+    max-width: 100%;
+    transition: transform 0.4s ease;
+    will-change: transform;
+  }
+
+  /* the soft glow that lifts the transparent shape off the dark sky. Filter
+     drop-shadow follows the die-cut edge instead of a rectangular box, since
+     there is no card. It intensifies with the lift on hover and focus. */
   .float :global(img) {
     width: auto;
     height: auto;
     max-width: 100%;
     max-height: clamp(150px, 20vw, 210px);
     filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 22px rgba(74, 234, 255, 0.28));
-    transition: transform 0.4s ease, filter 0.4s ease;
+    transition: filter 0.4s ease;
   }
-  .sticker:hover .float :global(img),
-  .sticker:focus-within .float :global(img) {
-    transform: translateY(-6px) scale(1.06);
-    filter: drop-shadow(0 12px 26px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 30px rgba(74, 234, 255, 0.45));
+  .sticker-link:hover .shape,
+  .sticker-link:focus-visible .shape {
+    transform: translateY(-8px) scale(1.06);
+  }
+  .sticker-link:hover .float :global(img),
+  .sticker-link:focus-visible .float :global(img) {
+    filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 34px rgba(74, 234, 255, 0.55));
+  }
+
+  /* the price tag: a small pill pinned to the shape's corner, understated, the
+     persistent for-sale cue that needs no hover. Cream on near-black clears AA
+     comfortably even where the sky is at its lightest. */
+  .tag {
+    position: absolute;
+    top: -6px;
+    right: -12px;
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: 0.06em;
+    color: var(--moon);
+    background: rgba(3, 5, 14, 0.78);
+    border: 1px solid rgba(74, 234, 255, 0.45);
+    border-radius: var(--radius-pill);
+    padding: 4px 9px;
+    white-space: nowrap;
+    box-shadow: 0 0 12px rgba(74, 234, 255, 0.2);
+    transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  }
+  .sticker-link:hover .tag,
+  .sticker-link:focus-visible .tag {
+    border-color: rgba(74, 234, 255, 0.85);
+    box-shadow: 0 0 18px rgba(74, 234, 255, 0.4);
   }
 
   .sticker-cap {
@@ -143,23 +205,35 @@ const stickers = [
     font-size: clamp(17px, 2vw, 22px);
     color: var(--moon);
     line-height: 1.2;
+    transition: text-shadow 0.4s ease;
   }
-  .sticker-price {
-    font-family: var(--font-body);
-    font-weight: 500;
-    font-size: 13px;
-    letter-spacing: 0.12em;
-    color: var(--cyan);
-    text-shadow: 0 0 12px rgba(74, 234, 255, 0.4);
+  .sticker-link:hover .sticker-title,
+  .sticker-link:focus-visible .sticker-title {
+    text-shadow: 0 0 16px rgba(74, 234, 255, 0.5);
   }
 
-  /* smaller than the page-level buttons: four of these sit in a row under the
-     art, so they read as a per-sticker action, not four page-level calls */
-  .sticker-buy {
-    margin-top: var(--space-2);
-    padding: 9px 18px;
+  /* the hover and focus hint. Its line is always reserved, so it fades in
+     without moving the name or the sticker above it. */
+  .sticker-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-body);
+    font-weight: 500;
     font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--cyan);
+    opacity: 0;
+    transform: translateY(-3px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
   }
+  .sticker-link:hover .sticker-hint,
+  .sticker-link:focus-visible .sticker-hint {
+    opacity: 1;
+    transform: none;
+  }
+  .hint-arrow { transition: transform 0.3s ease; }
+  .sticker-link:hover .hint-arrow { transform: translateX(3px); }
 
   /* two by two on small screens, still floating free on the sky */
   @media (max-width: 640px) {

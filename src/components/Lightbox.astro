@@ -17,13 +17,14 @@
  *    and whenever a new piece opens.
  *  - Metadata sits in a slim caption below the art (title, medium, short
  *    description, a Sold pill when applicable) with the calls to action, so it
- *    never shrinks the art. An acrylic original that carries its own Ko-fi
- *    listing gets a primary Buy on Ko-fi link and keeps Inquire beside it;
- *    everything else keeps Inquire on its own. Inquire opens Ko-fi
- *    commissions in a new tab (lib/links.ts) for every piece, sold acrylics
- *    and digital work included, since asking about any of them means asking
- *    for something made. It leaves the viewer open behind it, so people come
- *    back to the art they were studying.
+ *    never shrinks the art. What a piece offers comes from ctasFor (lib/art.ts),
+ *    shared with the Featured spotlight: an acrylic original with its own
+ *    listing leads with Buy on Ko-fi and keeps Inquire beside it, a digital
+ *    piece with a print listing leads with Buy a print on Ko-fi and offers
+ *    Commission your own beside it, and a piece with nothing listed shows the
+ *    commission link alone. Every one of them opens Ko-fi in a new tab and
+ *    leaves the viewer open behind it, so people come back to the art they
+ *    were studying. No prices here; the listing quotes those.
  *  - Esc and a visible close control both close it; focus is trapped while
  *    open and page scroll is locked. A dark scrim plus a blur of the gallery
  *    sits behind, over a faint static star field, so the constellation never
@@ -33,7 +34,7 @@
  * the 'lightbox:open' event the Constellation and Featured dispatch.
  */
 import { getImage } from 'astro:assets';
-import { getArt } from '../lib/art';
+import { getArt, ctasFor } from '../lib/art';
 import { starfield } from '../lib/starfield';
 import { KOFI_COMMISSIONS } from '../lib/links';
 
@@ -45,17 +46,6 @@ function badgeFor(d: (typeof works)[number]['data']): string | null {
   if (d.status === 'sold') return 'Sold';
   if (d.status === 'prints-only') return 'Original sold';
   return null;
-}
-
-// A direct buy link is only ever offered for an acrylic original that is still
-// available and has a verified listing of its own. Digital work keeps the
-// Inquire flow, and a sold original is never offered for sale even if a listing
-// URL is on file. No listing means no button, never an empty one.
-function buyUrlFor(d: (typeof works)[number]['data']): string | null {
-  if (!d.kofiUrl) return null;
-  if (!/^acrylic/i.test(d.medium)) return null;
-  if (d.status !== 'available') return null;
-  return d.kofiUrl;
 }
 
 // Build the largest source per piece at build time (full native width, encoded
@@ -70,7 +60,7 @@ const items = await Promise.all(
       sub: [d.medium, d.dimensions, d.year].filter(Boolean).join(' . '),
       note: d.note,
       badge: badgeFor(d),
-      buy: buyUrlFor(d),
+      ...ctasFor(d),
       src: full.src,
       alt: `${d.title}. ${d.note}`,
     };
@@ -102,9 +92,11 @@ const sky = starfield({ w: 1280, h: 720, seed: 9157, bg: 110, fg: 20, id: 'lbsky
       <p class="lb-sub"></p>
       <p class="lb-note"></p>
     </div>
+    <!-- the buy link carries no href until a piece supplies one, so it is never
+         a live button pointing nowhere; the commission link is the no-JS default -->
     <div class="lb-cta">
-      <a class="btn lb-buy" href="#" target="_blank" rel="noopener noreferrer" hidden>Buy on Ko-fi</a>
-      <a class="btn lb-inquire" href={KOFI_COMMISSIONS} target="_blank" rel="noopener noreferrer">Inquire</a>
+      <a class="btn lb-buy" target="_blank" rel="noopener noreferrer" hidden></a>
+      <a class="btn lb-commission" href={KOFI_COMMISSIONS} target="_blank" rel="noopener noreferrer">Inquire</a>
     </div>
   </figcaption>
 
@@ -257,7 +249,17 @@ const sky = starfield({ w: 1280, h: 720, seed: 9157, bg: 110, fg: 20, id: 'lbsky
 <script>
   const lb = document.getElementById('lightbox') as HTMLElement | null;
   if (lb) {
-    type Item = { title: string; sub: string; note: string; badge: string | null; buy: string | null; src: string; alt: string };
+    type Cta = { href: string; label: string; aria: string };
+    type Item = {
+      title: string;
+      sub: string;
+      note: string;
+      badge: string | null;
+      buy: Cta | null;
+      commission: Cta;
+      src: string;
+      alt: string;
+    };
     const data: Item[] = JSON.parse(document.getElementById('lb-data')!.textContent || '[]');
 
     const stage = lb.querySelector('.lb-stage') as HTMLElement;
@@ -270,7 +272,7 @@ const sky = starfield({ w: 1280, h: 720, seed: 9157, bg: 110, fg: 20, id: 'lbsky
     const subEl = lb.querySelector('.lb-sub') as HTMLElement;
     const noteEl = lb.querySelector('.lb-note') as HTMLElement;
     const buyEl = lb.querySelector('.lb-buy') as HTMLAnchorElement;
-    const inquireEl = lb.querySelector('.lb-inquire') as HTMLAnchorElement;
+    const commissionEl = lb.querySelector('.lb-commission') as HTMLAnchorElement;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     let current = 0;
@@ -318,20 +320,26 @@ const sky = starfield({ w: 1280, h: 720, seed: 9157, bg: 110, fg: 20, id: 'lbsky
       else { badgeEl.hidden = true; }
       subEl.textContent = d.sub;
       noteEl.textContent = d.note;
-      // A piece with its own listing leads with Buy and demotes Inquire to the
-      // secondary option; every other piece shows Inquire alone, as before.
+      // A piece with a listing of its own (an available original, or a print of
+      // a digital piece) leads with Buy and demotes the commission link to the
+      // secondary option; every other piece shows that link alone, as before.
+      // Wording and destination both come from ctasFor at build time.
       if (d.buy) {
-        buyEl.href = d.buy;
-        buyEl.setAttribute('aria-label', `Buy ${d.title} on Ko-fi`);
+        buyEl.href = d.buy.href;
+        buyEl.textContent = d.buy.label;
+        buyEl.setAttribute('aria-label', d.buy.aria);
         buyEl.hidden = false;
-        inquireEl.classList.add('ghost');
+        commissionEl.classList.add('ghost');
       } else {
         buyEl.hidden = true;
         buyEl.removeAttribute('href');
         buyEl.removeAttribute('aria-label');
-        inquireEl.classList.remove('ghost');
+        buyEl.textContent = '';
+        commissionEl.classList.remove('ghost');
       }
-      inquireEl.setAttribute('aria-label', `Inquire about ${d.title}`);
+      commissionEl.href = d.commission.href;
+      commissionEl.textContent = d.commission.label;
+      commissionEl.setAttribute('aria-label', d.commission.aria);
     }
 
     function show(i: number) {
@@ -492,7 +500,7 @@ const sky = starfield({ w: 1280, h: 720, seed: 9157, bg: 110, fg: 20, id: 'lbsky
       if (e.key === 'ArrowRight') { show(current + 1); return; }
       if (e.key === 'Tab') {
         // the buy link joins the trap only for pieces that show one
-        const f = [closeBtn, prevBtn, nextBtn, buyEl, inquireEl].filter(
+        const f = [closeBtn, prevBtn, nextBtn, buyEl, commissionEl].filter(
           (el): el is HTMLElement => !!el && !el.hidden
         );
         const first = f[0], last = f[f.length - 1];
