@@ -16,8 +16,10 @@
  *    Pan is constrained to the image bounds; zoom and position reset on close
  *    and whenever a new piece opens.
  *  - Metadata sits in a slim caption below the art (title, medium, short
- *    description, a Sold pill when applicable) with a single Inquire call to
- *    action, so it never shrinks the art.
+ *    description, a Sold pill when applicable) with the calls to action, so it
+ *    never shrinks the art. An acrylic original that carries its own Ko-fi
+ *    listing gets a primary Buy on Ko-fi link and keeps Inquire beside it;
+ *    everything else keeps Inquire on its own.
  *  - Esc and a visible close control both close it; focus is trapped while
  *    open and page scroll is locked. A dark scrim plus a blur of the gallery
  *    sits behind, over a faint static star field, so the constellation never
@@ -40,6 +42,17 @@ function badgeFor(d: (typeof works)[number]['data']): string | null {
   return null;
 }
 
+// A direct buy link is only ever offered for an acrylic original that is still
+// available and has a verified listing of its own. Digital work keeps the
+// Inquire flow, and a sold original is never offered for sale even if a listing
+// URL is on file. No listing means no button, never an empty one.
+function buyUrlFor(d: (typeof works)[number]['data']): string | null {
+  if (!d.kofiUrl) return null;
+  if (!/^acrylic/i.test(d.medium)) return null;
+  if (d.status !== 'available') return null;
+  return d.kofiUrl;
+}
+
 // Build the largest source per piece at build time (full native width, encoded
 // to webp). getArt() ordering is shared with the Constellation, so indices
 // agree for prev/next.
@@ -52,6 +65,7 @@ const items = await Promise.all(
       sub: [d.medium, d.dimensions, d.year].filter(Boolean).join(' . '),
       note: d.note,
       badge: badgeFor(d),
+      buy: buyUrlFor(d),
       src: full.src,
       alt: `${d.title}. ${d.note}`,
     };
@@ -83,7 +97,10 @@ const sky = starfield({ w: 1280, h: 720, seed: 9157, bg: 110, fg: 20, id: 'lbsky
       <p class="lb-sub"></p>
       <p class="lb-note"></p>
     </div>
-    <a class="btn lb-inquire" href="#contact" data-close>Inquire</a>
+    <div class="lb-cta">
+      <a class="btn lb-buy" href="#" target="_blank" rel="noopener noreferrer" hidden>Buy on Ko-fi</a>
+      <a class="btn lb-inquire" href="#contact" data-close>Inquire</a>
+    </div>
   </figcaption>
 
   <script type="application/json" id="lb-data" set:html={JSON.stringify(items)} is:inline />
@@ -203,7 +220,8 @@ const sky = starfield({ w: 1280, h: 720, seed: 9157, bg: 110, fg: 20, id: 'lbsky
     margin-top: 6px;
     max-width: 62ch;
   }
-  .lb-inquire { flex: 0 0 auto; }
+  .lb-cta { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; }
+  .lb-buy[hidden] { display: none; }
 
   .lb-close, .lb-nav {
     position: absolute;
@@ -234,7 +252,7 @@ const sky = starfield({ w: 1280, h: 720, seed: 9157, bg: 110, fg: 20, id: 'lbsky
 <script>
   const lb = document.getElementById('lightbox') as HTMLElement | null;
   if (lb) {
-    type Item = { title: string; sub: string; note: string; badge: string | null; src: string; alt: string };
+    type Item = { title: string; sub: string; note: string; badge: string | null; buy: string | null; src: string; alt: string };
     const data: Item[] = JSON.parse(document.getElementById('lb-data')!.textContent || '[]');
 
     const stage = lb.querySelector('.lb-stage') as HTMLElement;
@@ -246,6 +264,8 @@ const sky = starfield({ w: 1280, h: 720, seed: 9157, bg: 110, fg: 20, id: 'lbsky
     const badgeEl = lb.querySelector('.lb-badge') as HTMLElement;
     const subEl = lb.querySelector('.lb-sub') as HTMLElement;
     const noteEl = lb.querySelector('.lb-note') as HTMLElement;
+    const buyEl = lb.querySelector('.lb-buy') as HTMLAnchorElement;
+    const inquireEl = lb.querySelector('.lb-inquire') as HTMLAnchorElement;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     let current = 0;
@@ -293,6 +313,20 @@ const sky = starfield({ w: 1280, h: 720, seed: 9157, bg: 110, fg: 20, id: 'lbsky
       else { badgeEl.hidden = true; }
       subEl.textContent = d.sub;
       noteEl.textContent = d.note;
+      // A piece with its own listing leads with Buy and demotes Inquire to the
+      // secondary option; every other piece shows Inquire alone, as before.
+      if (d.buy) {
+        buyEl.href = d.buy;
+        buyEl.setAttribute('aria-label', `Buy ${d.title} on Ko-fi`);
+        buyEl.hidden = false;
+        inquireEl.classList.add('ghost');
+      } else {
+        buyEl.hidden = true;
+        buyEl.removeAttribute('href');
+        buyEl.removeAttribute('aria-label');
+        inquireEl.classList.remove('ghost');
+      }
+      inquireEl.setAttribute('aria-label', `Inquire about ${d.title}`);
     }
 
     function show(i: number) {
@@ -452,7 +486,10 @@ const sky = starfield({ w: 1280, h: 720, seed: 9157, bg: 110, fg: 20, id: 'lbsky
       if (e.key === 'ArrowLeft') { show(current - 1); return; }
       if (e.key === 'ArrowRight') { show(current + 1); return; }
       if (e.key === 'Tab') {
-        const f = [closeBtn, prevBtn, nextBtn, lb!.querySelector('.lb-inquire') as HTMLElement].filter(Boolean);
+        // the buy link joins the trap only for pieces that show one
+        const f = [closeBtn, prevBtn, nextBtn, buyEl, inquireEl].filter(
+          (el): el is HTMLElement => !!el && !el.hidden
+        );
         const first = f[0], last = f[f.length - 1];
         if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
         else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }

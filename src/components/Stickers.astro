@@ -7,8 +7,8 @@
  * bobs slowly on its own phase and speed, drifting independently, and lifts
  * a little on hover. Transform and opacity only; the bob runs only while the
  * section is in view and the tab is visible, paused otherwise. Reduced motion
- * holds them still (global.css stops all animation). Title and price sit
- * under each; a single Ko-fi button leads out below the row.
+ * holds them still (global.css stops all animation). Title, price, and a buy
+ * link to that sticker's own Ko-fi listing sit under each.
  */
 import { Image } from 'astro:assets';
 import gvo from '../assets/stickers/gvo.png';
@@ -16,13 +16,33 @@ import lil from '../assets/stickers/lil.png';
 import bk from '../assets/stickers/bk.png';
 import chlta from '../assets/stickers/chlta.png';
 
-const KOFI = 'https://ko-fi.com/bee_magical';
-
+// kofiUrl is that sticker's own shop listing. These ids are opaque and cannot
+// be derived from the title, so only ever set one from a verified listing.
 const stickers = [
-  { image: gvo, title: 'Good Vibes Only', alt: 'Good Vibes Only sticker in iridescent bubble lettering' },
-  { image: lil, title: 'Love is Love', alt: 'Love is Love sticker with a rainbow gradient and a pink heart' },
-  { image: bk, title: 'Bee Kind', alt: 'Bee Kind sticker in pink glittered script with a little bee' },
-  { image: chlta, title: '¡Sé buena gente... O chancleta!', alt: 'Se buena gente o chancleta sticker with a brown chancleta sandal' },
+  {
+    image: gvo,
+    title: 'Good Vibes Only',
+    alt: 'Good Vibes Only sticker in iridescent bubble lettering',
+    kofiUrl: 'https://ko-fi.com/s/332300ea0d',
+  },
+  {
+    image: lil,
+    title: 'Love is Love',
+    alt: 'Love is Love sticker with a rainbow gradient and a pink heart',
+    kofiUrl: 'https://ko-fi.com/s/fc8f02575e',
+  },
+  {
+    image: bk,
+    title: 'Bee Kind',
+    alt: 'Bee Kind sticker in pink glittered script with a little bee',
+    kofiUrl: 'https://ko-fi.com/s/a3cba5bd6c',
+  },
+  {
+    image: chlta,
+    title: '¡Sé buena gente... O chancleta!',
+    alt: 'Se buena gente o chancleta sticker with a brown chancleta sandal',
+    kofiUrl: 'https://ko-fi.com/s/ff6012a9b5',
+  },
 ];
 ---
 
@@ -41,13 +61,18 @@ const stickers = [
         <figcaption class="sticker-cap">
           <span class="sticker-title">{s.title}</span>
           <span class="sticker-price">$5</span>
+          <a
+            class="btn sticker-buy"
+            href={s.kofiUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Buy ${s.title} on Ko-fi`}
+          >
+            Buy on Ko-fi
+          </a>
         </figcaption>
       </figure>
     ))}
-  </div>
-
-  <div class="sticker-cta reveal">
-    <a class="btn" href={KOFI} target="_blank" rel="noopener">Get them on Ko-fi</a>
   </div>
 </section>
 
@@ -128,7 +153,13 @@ const stickers = [
     text-shadow: 0 0 12px rgba(74, 234, 255, 0.4);
   }
 
-  .sticker-cta { margin-top: var(--space-5); text-align: center; }
+  /* smaller than the page-level buttons: four of these sit in a row under the
+     art, so they read as a per-sticker action, not four page-level calls */
+  .sticker-buy {
+    margin-top: var(--space-2);
+    padding: 9px 18px;
+    font-size: 12px;
+  }
 
   /* two by two on small screens, still floating free on the sky */
   @media (max-width: 640px) {

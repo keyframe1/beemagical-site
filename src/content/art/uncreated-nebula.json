@@ -1,5 +1,6 @@
 {
   "_todo": "This piece is untitled; 'Nebula' is a placeholder and the medium is a best-guess. Confirm both with Hannah. Node id kept as uncreated-nebula to preserve its constellation position and links.",
+  "_todoKofi": "CONFIRM WITH HANNAH before wiring a buy link: the Ko-fi shop lists 'Nebula 125.26 Original Painting' (https://ko-fi.com/s/4426e6fd25) as available, but this piece is marked sold here. Is it the same painting, and is it actually still available? If it is, set status to 'available' and add that URL as kofiUrl. Left unwired on purpose so a sold piece is never offered for sale.",
   "title": "Nebula",
   "medium": "Acrylic on canvas",
   "note": "An amber and teal nebula around a bright star cluster.",

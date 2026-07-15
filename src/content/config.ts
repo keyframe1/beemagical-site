@@ -24,6 +24,10 @@ const art = defineCollection({
       status: z.enum(['available', 'sold', 'prints-only']).default('available'),
       prints: z.boolean().default(false),
       printsFrom: z.number().optional(),
+      // Direct link to this piece's own Ko-fi shop listing. Only set it from a
+      // verified per-listing URL; these are opaque ids and cannot be derived
+      // from the title. Omit it and the piece keeps the plain Inquire flow.
+      kofiUrl: z.string().url().optional(),
       image: image(),
       note: z.string(),
       // Constellation position, as a percent of the map (0-100).

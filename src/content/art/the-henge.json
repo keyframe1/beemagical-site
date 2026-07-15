@@ -1,9 +1,11 @@
 {
+  "_note": "The Ko-fi listing for this piece is named 'Visiting The Henge'. It belongs to this piece, not to 'Visiting' (visiting.json), which has its own listing.",
   "title": "The Henge",
   "medium": "Acrylic on canvas",
   "year": 2026,
   "note": "A saucer casts a teal beam down onto Stonehenge beneath a starry night.",
   "status": "available",
+  "kofiUrl": "https://ko-fi.com/s/ee7d7ec90a",
   "image": "../../assets/art/thehenge.jpg",
   "x": 45,
   "y": 79,
