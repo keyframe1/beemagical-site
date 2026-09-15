@@ -3,10 +3,13 @@
  * Commissions.astro - the section reads top to bottom as one story:
  *   1. Process opener - a full-width cinematic band that plays a piece coming
  *      to life, the section's hero rather than a small card.
- *   2. Examples grid - exactly six uniform cards (two portrait time-lapses and
- *      four pet portraits) in a tidy 3x2 on desktop, filling their frames with
- *      no letterboxing, every card sharing the same corner-star treatment and
- *      the same title + subline label style.
+ *   2. Examples grid - uniform cards (two portrait time-lapses, four pet
+ *      portraits, and one logo/design example) in a tidy 3-column layout on
+ *      desktop, every card sharing the same corner-star treatment and the
+ *      same title + subline label style. The portrait and pet cards fill
+ *      their frames edge to edge with no letterboxing; the logo card keeps
+ *      its own frame shaped to the artwork's native ratio instead, so a wide
+ *      wordmark reads complete rather than cropped down to a sliver.
  *   3. Testimonial - a client's words glowing out of the night sky inside a
  *      real constellation frame (see below).
  *   4. Call to action - one button into Ko-fi commissions (lib/links.ts),
@@ -24,6 +27,7 @@ import lucy from '../assets/commissions/lucy.png';
 import anubisAndUma from '../assets/commissions/anubis-and-uma.png';
 import mickPosterImg from '../assets/commissions/mick-jagger.png';
 import justinPosterImg from '../assets/commissions/justin.png';
+import francisLogo from '../assets/commissions/francis.png';
 import { testimonials } from '../lib/testimonials';
 import { KOFI_COMMISSIONS } from '../lib/links';
 
@@ -40,7 +44,7 @@ const featured = testimonials[0];
 const mickPoster = await getImage({ src: mickPosterImg, width: 880, quality: 72, format: 'jpg' });
 const justinPoster = await getImage({ src: justinPosterImg, width: 880, quality: 72, format: 'jpg' });
 
-// The six example cards in one list so the grid is uniform: same shape, same
+// The example cards in one list so the grid is uniform: same shape, same
 // label style (a proper title plus one short subline), whether the piece is a
 // playing time-lapse or a finished still. The two portraits carry real names
 // now, no longer generic while the pets have names.
@@ -71,6 +75,16 @@ const cards = [
   { kind: 'still', title: 'Bird', subline: 'Pet portrait', image: bird, alt: 'Bird, a digital painting of a black cat with golden eyes' },
   { kind: 'still', title: 'Lucy', subline: 'Pet portrait', image: lucy, alt: 'Lucy, a painted portrait of a silver-muzzled dog with tall ears, emerging from a dark background' },
   { kind: 'still', title: 'Anubis and Uma', subline: 'Pet portrait', image: anubisAndUma, alt: 'Anubis and Uma, a painted portrait of two cats, one black and one cream with dark points, against a deep green background' },
+  {
+    kind: 'still',
+    title: 'Francis Lightningheart Logo',
+    subline: 'Logo commission',
+    image: francisLogo,
+    alt: 'The Francis Lightningheart wordmark: pink script over chrome lettering with a lightning-bolt heart emblem',
+    // Shows its own native ratio instead of the 3:4 portrait frame the other
+    // cards use, so a wide wordmark reads complete rather than sliced down.
+    logo: true,
+  },
 ];
 
 // Responsive sources for the still portraits. Each card is at most ~340px wide
@@ -130,11 +144,14 @@ const tmSeg = tmNodes.map((n, i) => {
     </div>
   </div>
 
-  <!-- 2. the examples: six uniform cards, 3x2 on desktop -->
+  <!-- 2. the examples: uniform cards in a 3-column grid on desktop -->
   <div class="com-grid reveal">
     {cards.map((c) => (
       <figure class="com-card">
-        <div class="com-frame">
+        <div
+          class:list={['com-frame', { logo: c.logo }]}
+          style={c.logo ? `--logo-ratio:${francisLogo.width} / ${francisLogo.height}` : undefined}
+        >
           <span class="com-star tl" aria-hidden="true"></span>
           <span class="com-star br" aria-hidden="true"></span>
           {c.kind === 'video' ? (
@@ -270,6 +287,10 @@ const tmSeg = tmNodes.map((n, i) => {
     object-fit: cover;
     object-position: center;
   }
+  /* the logo card is shaped to its own artwork instead of the 3:4 portrait
+     frame: aspect-ratio matches the source exactly, so cover crops nothing
+     and the wordmark shows whole */
+  .com-frame.logo :global(img) { aspect-ratio: var(--logo-ratio, 3 / 4); }
 
   .com-star {
     position: absolute;
